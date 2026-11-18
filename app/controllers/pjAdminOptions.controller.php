@@ -246,29 +246,39 @@ class pjAdminOptions extends pjAdmin
 	
 		if ($this->isAdmin())
 		{
+			$requested = isset($_POST['locale']) ? $_POST['locale'] : (isset($_GET['locale']) ? $_GET['locale'] : 0);
+			$content_locale = $this->isMultiLang() ? $this->validLocaleId($requested) : $this->getDefaultLocaleId();
+			
 			if (isset($_POST['seo_update']))
 			{
 				$pjOptionModel = pjOptionModel::factory();
-	
-				$pjOptionModel
-					->reset()
-					->where('foreign_id', $this->getForeignId())
-					->where('`key`', 'o_meta_title')
-					->limit(1)
-					->modifyAll(array('value' => $_POST['o_meta_title']));
-				$pjOptionModel
-					->reset()
-					->where('foreign_id', $this->getForeignId())
-					->where('`key`', 'o_meta_keywords')
-					->limit(1)
-					->modifyAll(array('value' => $_POST['o_meta_keywords']));
-				$pjOptionModel
-					->reset()
-					->where('foreign_id', $this->getForeignId())
-					->where('`key`', 'o_meta_description')
-					->limit(1)
-					->modifyAll(array('value' => $_POST['o_meta_description']));
-				pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminOptions&action=pjActionSeo&err=AS01");
+				$seo_keys = pjAppController::$translatable['pjOption'];
+				$is_default = !$content_locale || (int) $content_locale === (int) $this->getDefaultLocaleId();
+				
+				// The default language is also kept in the options (the fallback); another
+				// language only changes its own translation.
+				if ($is_default)
+				{
+					foreach ($seo_keys as $key)
+					{
+						$pjOptionModel
+							->reset()
+							->where('foreign_id', $this->getForeignId())
+							->where('`key`', $key)
+							->limit(1)
+							->modifyAll(array('value' => $_POST[$key]));
+					}
+				}
+				if ($content_locale)
+				{
+					$values = array();
+					foreach ($seo_keys as $key)
+					{
+						$values[$key] = isset($_POST[$key]) ? $_POST[$key] : '';
+					}
+					pjMultiLangModel::factory()->updateMultiLang(array((int) $content_locale => $values), $this->getForeignId(), 'pjOption', 'data');
+				}
+				pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminOptions&action=pjActionSeo" . ($content_locale ? "&locale=" . (int) $content_locale : "") . "&err=AS01");
 			}else{
 				$arr = pjOptionModel::factory()
 					->where('t1.foreign_id', $this->getForeignId())
@@ -277,6 +287,25 @@ class pjAdminOptions extends pjAdmin
 					->getData();
 	
 				$this->set('arr', $arr);
+				
+				// Values shown in the form: the chosen language's own text (another language
+				// starts empty), or the saved options for the default language.
+				$i18n = pjMultiLangModel::factory()->getMultiLang($this->getForeignId(), 'pjOption');
+				$seo = array();
+				$is_default = !$content_locale || (int) $content_locale === (int) $this->getDefaultLocaleId();
+				foreach (pjAppController::$translatable['pjOption'] as $key)
+				{
+					if (isset($i18n[$content_locale][$key]))
+					{
+						$seo[$key] = $i18n[$content_locale][$key];
+					} else {
+						$seo[$key] = $is_default && isset($this->option_arr[$key]) ? $this->option_arr[$key] : '';
+					}
+				}
+				$this->set('seo', $seo);
+				$this->set('lp_arr', $this->getLocales());
+				$this->set('content_locale', $content_locale);
+				$this->set('translation_missing', !$is_default && !isset($i18n[$content_locale]));
 	
 				$this->appendJs('pjAdminOptions.js');
 			}

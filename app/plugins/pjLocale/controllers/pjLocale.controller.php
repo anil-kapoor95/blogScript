@@ -136,6 +136,11 @@ class pjLocale extends pjLocaleAppController
 				pjAppController::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => 'Locale not found.'));
 			}
 			
+			if ((int) $arr['is_default'] === 1)
+			{
+				pjAppController::jsonResponse(array('status' => 'ERR', 'code' => 102, 'text' => 'Can\'t delete the default locale.'));
+			}
+			
 			if ($pjLocaleModel->reset()->set('id', $_GET['id'])->erase()->getAffectedRows() != 1)
 			{
 				pjAppController::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => 'Locale has not been deleted.'));
@@ -818,12 +823,24 @@ class pjLocale extends pjLocaleAppController
 		if (empty($locale_id))
 		{
 			$arr = $pjLocaleModel->reset()->findAll()->getData();
+			// The new language starts as a copy of the default language (texts, categories, posts...)
 			foreach ($arr as $locale)
 			{
-				if ($locale['language_iso'] == 'gb')
+				if ((int) $locale['is_default'] === 1 && (int) $locale['id'] !== (int) $insert_id)
 				{
 					$locale_id = $locale['id'];
 					break;
+				}
+			}
+			if (empty($locale_id))
+			{
+				foreach ($arr as $locale)
+				{
+					if ($locale['language_iso'] == 'gb')
+					{
+						$locale_id = $locale['id'];
+						break;
+					}
 				}
 			}
 			if (is_null($locale_id) && !empty($arr))

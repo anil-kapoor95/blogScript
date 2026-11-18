@@ -6,25 +6,71 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 			validate = ($.fn.validate !== undefined),
 			datagrid = ($.fn.datagrid !== undefined);
 
+		// Names of the language fields (i18n[<language id>][category]); the default language is required
+		function categoryRules($form, categoryId) {
+			var rules = {}, messages = {},
+				defaultName = "i18n[" + myLabel.default_locale + "][category]";
+			$form.find("input[name^='i18n['][name$='][category]']").each(function () {
+				var $input = $(this),
+					locale = $input.attr("lang"),
+					name = $input.attr("name"),
+					isDefault = (name === defaultName);
+				rules[name] = {
+					remote: {
+						url: "index.php?controller=pjAdminCategories&action=pjActionCheckCategory",
+						type: "get",
+						data: {
+							category: function () {
+								return $input.val();
+							},
+							locale: locale,
+							id: categoryId
+						}
+					}
+				};
+				messages[name] = {
+					remote: myLabel.same_category
+				};
+				if (isDefault) {
+					rules[name].required = true;
+					messages[name].required = myLabel.field_required;
+				}
+			});
+			// URL slug of the default language: must be free (the slug fields of the other languages are not checked)
+			var slugName = "i18n[" + myLabel.default_locale + "][url_slug]",
+				$slug = $form.find("input[name='" + slugName + "']");
+			if ($slug.length) {
+				rules[slugName] = {
+					remote: {
+						url: "index.php?controller=pjAdminCategories&action=pjActionCheckSlug",
+						type: "get",
+						data: {
+							url_slug: function () {
+								return $slug.val();
+							},
+							id: categoryId
+						}
+					}
+				};
+			}
+			return {rules: rules, messages: messages};
+		}
+		
 		if ($frmCreateCategory.length > 0 && validate) {
+			var createCfg = categoryRules($frmCreateCategory, 0);
 			$frmCreateCategory.validate({
-				rules: {
-					"category": {
-						required: true,
-						remote: "index.php?controller=pjAdminCategories&action=pjActionCheckCategory"
-					},
-					"url_slug": {
-						remote: "index.php?controller=pjAdminCategories&action=pjActionCheckSlug&id=0"
-					}
-				},
-				messages:{
-					"category": {
-						required: myLabel.field_required,
-						remote: myLabel.same_category
-					}
-				},
+				rules: createCfg.rules,
+				messages: createCfg.messages,
+				ignore: "",
 				errorPlacement: function (error, element) {
 					error.insertAfter(element.parent());
+				},
+				invalidHandler: function (event, validator) {
+					// show the language that has the problem
+					var $bad = $(validator.errorList[0] ? validator.errorList[0].element : []);
+					if ($bad.length > 0) {
+						$(".pj-form-langbar-item[data-index='" + $bad.attr("lang") + "']").trigger("click");
+					}
 				},
 				onkeyup: false,
 				errorClass: "err",
@@ -32,24 +78,19 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 			});
 		}
 		if ($frmUpdateCategory.length > 0 && validate) {
+			var updateCfg = categoryRules($frmUpdateCategory, $frmUpdateCategory.find("input[name='id']").val());
 			$frmUpdateCategory.validate({
-				rules: {
-					"category": {
-						required: true,
-						remote: "index.php?controller=pjAdminCategories&action=pjActionCheckCategory&id=" + $frmUpdateCategory.find("input[name='id']").val()
-					},
-					"url_slug": {
-						remote: "index.php?controller=pjAdminCategories&action=pjActionCheckSlug&id=" + $frmUpdateCategory.find("input[name='id']").val()
-					}
-				},
-				messages:{
-					"category": {
-						required: myLabel.field_required,
-						remote: myLabel.same_category
-					}
-				},
+				rules: updateCfg.rules,
+				messages: updateCfg.messages,
+				ignore: "",
 				errorPlacement: function (error, element) {
 					error.insertAfter(element.parent());
+				},
+				invalidHandler: function (event, validator) {
+					var $bad = $(validator.errorList[0] ? validator.errorList[0].element : []);
+					if ($bad.length > 0) {
+						$(".pj-form-langbar-item[data-index='" + $bad.attr("lang") + "']").trigger("click");
+					}
 				},
 				onkeyup: false,
 				errorClass: "err",

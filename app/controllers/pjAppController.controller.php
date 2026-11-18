@@ -33,7 +33,9 @@ class pjAppController extends pjController
 				|| !isset($_SESSION[$this->defaultFieldsIndex])
 				|| $_SESSION[$this->defaultFieldsIndex] != $this->option_arr['o_fields_index']
 				|| !isset($_SESSION[$fields])
-				|| empty($_SESSION[$fields]))
+				|| empty($_SESSION[$fields])
+				|| !isset($_SESSION[$this->defaultFieldsIndex . '_locale'])
+				|| $_SESSION[$this->defaultFieldsIndex . '_locale'] != $locale_id)
 		{
 			pjAppController::setFields($locale_id);
 	
@@ -43,6 +45,8 @@ class pjAppController extends pjController
 				$_SESSION[$fields] = $registry->get('fields');
 			}
 			$_SESSION[$this->defaultFieldsIndex] = $this->option_arr['o_fields_index'];
+			# Remember which language the cached labels belong to, so switching language reloads them
+			$_SESSION[$this->defaultFieldsIndex . '_locale'] = $locale_id;
 		}
 	
 		if (isset($_SESSION[$fields]) && !empty($_SESSION[$fields]))
@@ -367,6 +371,578 @@ class pjAppController extends pjController
 		return $str;
 	}
 
+	/* ------------------------------------------------------------------
+	 * Multi-language content (categories and posts)
+	 *
+	 * Translations live in the `multi_lang` table (one row per model, record,
+	 * language and field - the same storage the Locale plugin and the other
+	 * PHPJabbers scripts use). The original columns of `categories` and
+	 * `posts` stay as the default-language copy and as the fallback shown
+	 * when a translation is missing or empty.
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Translatable fields per model.
+	 *
+	 * @var array
+	 */
+	public static $translatable = array(
+		'pjCategory' => array('category', 'meta_title', 'meta_keywords', 'meta_description', 'url_slug'),
+		'pjPost' => array('title', 'body', 'meta_title', 'meta_keywords', 'meta_description', 'url_slug'),
+		// site-wide SEO defaults (Options > SEO), stored for the options record with ID 1
+		'pjOption' => array('o_meta_title', 'o_meta_keywords', 'o_meta_description')
+	);
+
+	/**
+	 * All languages (sorted), each with the flag image file, or an empty array when the
+	 * Languages feature is not available. Cached per request.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function getLocales()
+	{
+		static $locales = NULL;
+		if ($locales === NULL)
+		{
+			$locales = array();
+			if (class_exists('pjLocaleModel'))
+			{
+				$locales = pjLocaleModel::factory()
+					->select('t1.*, t2.file')
+					->join('pjLocaleLanguage', 't2.iso=t1.language_iso', 'left')
+					->where('t2.file IS NOT NULL')
+					->orderBy('t1.sort ASC, t1.id ASC')
+					->findAll()
+					->getData();
+				foreach ($locales as $k => $locale)
+				{
+					$locales[$k]['flag_url'] = !empty($locale['flag']) && is_file(PJ_INSTALL_PATH . $locale['flag'])
+						? PJ_INSTALL_URL . $locale['flag']
+						: PJ_INSTALL_URL . PJ_FRAMEWORK_LIBS_PATH . 'pj/img/flags/' . $locale['file'];
+				}
+			}
+		}
+		return $locales;
+	}
+
+	/**
+	 * Is the multi-language mode on and is there more than one language?
+	 *
+	 * @access public
+	 * @return boolean
+	 */
+	public function isMultiLang()
+	{
+		return isset($this->option_arr['o_multi_lang']) && (int) $this->option_arr['o_multi_lang'] === 1 && count($this->getLocales()) > 1;
+	}
+
+	/**
+	 * @access public
+	 * @return integer|boolean Default language ID or FALSE
+	 */
+	public function getDefaultLocaleId()
+	{
+		foreach ($this->getLocales() as $locale)
+		{
+			if ((int) $locale['is_default'] === 1)
+			{
+				return (int) $locale['id'];
+			}
+		}
+		$locales = $this->getLocales();
+		return empty($locales) ? FALSE : (int) $locales[0]['id'];
+	}
+
+	/**
+	 * Return the given language ID when it is a known language, otherwise the default one.
+	 *
+	 * @param mixed $locale_id
+	 * @access public
+	 * @return integer|boolean
+	 */
+	public function validLocaleId($locale_id)
+	{
+		foreach ($this->getLocales() as $locale)
+		{
+			if ((int) $locale['id'] === (int) $locale_id)
+			{
+				return (int) $locale['id'];
+			}
+		}
+		return $this->getDefaultLocaleId();
+	}
+
+	/**
+	 * Put the translated text over the rows' own (default-language) text. A missing or empty
+	 * translation leaves the original value untouched, so the default language is the fallback.
+	 *
+	 * @param array $rows Rows with an 'id' key, changed in place. Pass a single row via translateRow().
+	 * @param string $model pjCategory|pjPost
+	 * @param integer|NULL $locale_id Defaults to the current language
+	 * @access public
+	 * @return array
+	 */
+	public function translateRows($rows, $model, $locale_id=NULL)
+	{
+		if (empty($rows) || !isset(self::$translatable[$model]) || !$this->isMultiLang())
+		{
+			return $rows;
+		}
+		if (is_null($locale_id))
+		{
+			$locale_id = $this->getLocaleId();
+		}
+		if (empty($locale_id))
+		{
+			return $rows;
+		}
+		$ids = array();
+		foreach ($rows as $row)
+		{
+			if (isset($row['id']))
+			{
+				$ids[] = (int) $row['id'];
+			}
+		}
+		if (empty($ids))
+		{
+			return $rows;
+		}
+		$tr = array();
+		$data = pjMultiLangModel::factory()
+			->where('t1.model', $model)
+			->where('t1.locale', (int) $locale_id)
+			->whereIn('t1.foreign_id', $ids)
+			->whereIn('t1.field', self::$translatable[$model])
+			->findAll()
+			->getData();
+		$is_default_locale = (int) $locale_id === (int) $this->getDefaultLocaleId();
+		foreach ($data as $item)
+		{
+			if ($item['field'] === 'url_slug' && $is_default_locale)
+			{
+				continue;
+			}
+			if ($item['content'] !== NULL && trim($item['content']) !== '')
+			{
+				$tr[(int) $item['foreign_id']][$item['field']] = $item['content'];
+			}
+		}
+		foreach ($rows as $k => $row)
+		{
+			if (isset($row['id']) && isset($tr[(int) $row['id']]))
+			{
+				foreach ($tr[(int) $row['id']] as $field => $content)
+				{
+					$rows[$k][$field] = $content;
+				}
+			}
+		}
+		return $rows;
+	}
+
+	/**
+	 * Put the site-wide SEO defaults (title, keywords, description) of the language being browsed over
+	 * the values saved in the options. An empty translation keeps the default-language value.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function translateOptions()
+	{
+		if (!$this->isMultiLang() || !$this->getLocaleId())
+		{
+			return;
+		}
+		$data = pjMultiLangModel::factory()
+			->where('t1.model', 'pjOption')
+			->where('t1.foreign_id', $this->getForeignId())
+			->where('t1.locale', (int) $this->getLocaleId())
+			->findAll()
+			->getData();
+		foreach ($data as $item)
+		{
+			if (in_array($item['field'], self::$translatable['pjOption']) && $item['content'] !== NULL && trim($item['content']) !== '')
+			{
+				$this->option_arr[$item['field']] = $item['content'];
+			}
+		}
+		$this->set('option_arr', $this->option_arr);
+	}
+
+	/**
+	 * Same as translateRows() for one row.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function translateRow($row, $model, $locale_id=NULL)
+	{
+		if (empty($row) || !isset($row['id']))
+		{
+			return $row;
+		}
+		$rows = $this->translateRows(array($row), $model, $locale_id);
+		return $rows[0];
+	}
+
+	/**
+	 * Translations of one record, grouped as array(locale_id => array(field => content)).
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function getTranslations($model, $id)
+	{
+		return pjMultiLangModel::factory()->getMultiLang((int) $id, $model);
+	}
+
+	/**
+	 * Save the text of one language of a record into `multi_lang`.
+	 *
+	 * @param string $model pjCategory|pjPost
+	 * @param integer $id Record ID
+	 * @param integer $locale_id Language ID
+	 * @param array $values array(field => content); fields that are not translatable are ignored
+	 * @access public
+	 * @return void
+	 */
+	public function saveTranslation($model, $id, $locale_id, $values)
+	{
+		if (!isset(self::$translatable[$model]) || empty($locale_id) || (int) $id <= 0)
+		{
+			return;
+		}
+		$data = array();
+		foreach (self::$translatable[$model] as $field)
+		{
+			// the URL slug of the default language lives in the original column only
+			if ($field === 'url_slug' && (int) $locale_id === (int) $this->getDefaultLocaleId())
+			{
+				continue;
+			}
+			if (array_key_exists($field, $values))
+			{
+				$data[$field] = is_null($values[$field]) ? '' : $values[$field];
+			}
+		}
+		if (!empty($data))
+		{
+			pjMultiLangModel::factory()->updateMultiLang(array((int) $locale_id => $data), (int) $id, $model, 'data');
+		}
+	}
+
+	/**
+	 * Remove all the translations of a record (used when the record is deleted).
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function eraseTranslations($model, $ids)
+	{
+		$ids = array_filter(array_map('intval', (array) $ids));
+		if (!empty($ids))
+		{
+			pjMultiLangModel::factory()->where('model', $model)->whereIn('foreign_id', $ids)->eraseAll();
+		}
+	}
+
+	/**
+	 * Language ID for a "blog_lang" value: a language code (e.g. fr-FR) or a language ID. Empty or unknown
+	 * values give the default language.
+	 *
+	 * @param mixed $value
+	 * @access public
+	 * @return integer|boolean
+	 */
+	public function localeFromParam($value)
+	{
+		$value = is_string($value) ? trim($value) : '';
+		if ($value !== '')
+		{
+			foreach ($this->getLocales() as $locale)
+			{
+				if (strcasecmp($locale['language_iso'], $value) === 0 || (ctype_digit($value) && (int) $locale['id'] === (int) $value))
+				{
+					return (int) $locale['id'];
+				}
+			}
+		}
+		return $this->getDefaultLocaleId();
+	}
+
+	/**
+	 * Language code of a language ID (e.g. fr-FR), or ''.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function localeIso($locale_id)
+	{
+		foreach ($this->getLocales() as $locale)
+		{
+			if ((int) $locale['id'] === (int) $locale_id)
+			{
+				return $locale['language_iso'];
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * The URL slug to save for a translation: cleaned like every slug, and made unique among the slugs
+	 * of the same language (-2, -3 ...). An empty slug is made from $text; if that is empty too the
+	 * translation has no slug of its own and the default-language slug is used.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function translatedSlug($model, $id, $locale_id, $posted, $text='')
+	{
+		$base = trim($this->friendlyURL(stripslashes(trim((string) $posted))), '-');
+		if ($base === '')
+		{
+			$base = trim($this->friendlyURL(stripslashes(trim((string) $text))), '-');
+		}
+		$base = function_exists('mb_substr') ? mb_substr($base, 0, 200) : substr($base, 0, 200);
+		if ($base === '')
+		{
+			return '';
+		}
+		$slug = $base;
+		for ($n = 2; $n < 200; $n++)
+		{
+			$count = pjMultiLangModel::factory()
+				->where('t1.model', $model)
+				->where('t1.field', 'url_slug')
+				->where('t1.locale', (int) $locale_id)
+				->where('t1.content', $slug)
+				->where('t1.foreign_id <> ' . (int) $id)
+				->findCount()
+				->getData();
+			if ((int) $count === 0)
+			{
+				return $slug;
+			}
+			$slug = $base . '-' . $n;
+		}
+		return $base . '-' . uniqid();
+	}
+
+	/**
+	 * Language part of a front-end URL: empty for the default language (so the existing URLs
+	 * do not change), "locale=ID" for every other language.
+	 *
+	 * @param integer|NULL $locale_id Defaults to the current language
+	 * @access public
+	 * @return string
+	 */
+	public function localeQuery($locale_id=NULL)
+	{
+		if (!$this->isMultiLang())
+		{
+			return '';
+		}
+		if (is_null($locale_id))
+		{
+			$locale_id = $this->getLocaleId();
+		}
+		if (empty($locale_id) || (int) $locale_id === (int) $this->getDefaultLocaleId())
+		{
+			return '';
+		}
+		return 'blog_lang=' . rawurlencode($this->localeIso($locale_id));
+	}
+
+	/**
+	 * Append the language part to a URL.
+	 *
+	 * @param string $url
+	 * @param boolean $htmlEncode Use '&amp;'
+	 * @param integer|NULL $locale_id
+	 * @access public
+	 * @return string
+	 */
+	public function addLocaleToUrl($url, $htmlEncode=false, $locale_id=NULL)
+	{
+		$q = $this->localeQuery($locale_id);
+		if ($q === '')
+		{
+			return $url;
+		}
+		$amp = $htmlEncode ? '&amp;' : '&';
+		return $url . (strpos($url, '?') === false ? '?' : $amp) . $q;
+	}
+
+	/**
+	 * Absolute URL of the page being shown in another language: the same address with the
+	 * "locale" parameter set (and dropped for the default language).
+	 *
+	 * @param integer $locale_id
+	 * @param boolean $htmlEncode
+	 * @access public
+	 * @return string
+	 */
+	public function switchLocaleUrl($locale_id, $htmlEncode=false)
+	{
+		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : $_SERVER['SCRIPT_NAME'];
+		$parts = explode('?', $uri, 2);
+		$params = array();
+		if (isset($parts[1]) && $parts[1] !== '')
+		{
+			foreach (explode('&', $parts[1]) as $pair)
+			{
+				$k = urldecode(current(explode('=', $pair, 2)));
+				if ($pair !== '' && $k !== 'blog_lang')
+				{
+					$params[] = $pair;
+				}
+			}
+		}
+		if ((int) $locale_id !== (int) $this->getDefaultLocaleId())
+		{
+			$params[] = 'blog_lang=' . rawurlencode($this->localeIso($locale_id));
+		}
+		$url = $parts[0] . (empty($params) ? '' : '?' . implode('&', $params));
+		return $htmlEncode ? str_replace('&', '&amp;', $url) : $url;
+	}
+
+	/**
+	 * Translate post rows and, when they carry the category name (the 'category' key from the
+	 * joined category), the category name too.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function translatePostRows($rows, $locale_id=NULL)
+	{
+		if (empty($rows) || !$this->isMultiLang())
+		{
+			return $rows;
+		}
+		$rows = $this->translateRows($rows, 'pjPost', $locale_id);
+		$cat_ids = array();
+		foreach ($rows as $row)
+		{
+			if (!empty($row['category_id']) && array_key_exists('category', $row))
+			{
+				$cat_ids[(int) $row['category_id']] = (int) $row['category_id'];
+			}
+		}
+		if (!empty($cat_ids))
+		{
+			$cats = array();
+			foreach ($this->translateRows(pjCategoryModel::factory()->whereIn('t1.id', array_values($cat_ids))->findAll()->getData(), 'pjCategory', $locale_id) as $cat)
+			{
+				$cats[(int) $cat['id']] = $cat['category'];
+			}
+			foreach ($rows as $k => $row)
+			{
+				if (!empty($row['category_id']) && isset($cats[(int) $row['category_id']]))
+				{
+					$rows[$k]['category'] = $cats[(int) $row['category_id']];
+				}
+			}
+		}
+		return $rows;
+	}
+
+	/**
+	 * Run a callback as if the visitor browsed in another language (the language is put back
+	 * afterwards). Used to build the links of the other language versions of a page.
+	 *
+	 * @access public
+	 * @return mixed
+	 */
+	public function runInLocale($locale_id, $callback)
+	{
+		$had = isset($_SESSION[$this->defaultLocale]);
+		$prev = $had ? $_SESSION[$this->defaultLocale] : NULL;
+		$this->setLocaleId($locale_id);
+		$result = call_user_func($callback, $locale_id);
+		if ($had)
+		{
+			$_SESSION[$this->defaultLocale] = $prev;
+		} else {
+			unset($_SESSION[$this->defaultLocale]);
+		}
+		return $result;
+	}
+
+	/**
+	 * Percent-encode the non-ASCII characters of a URL (a slug in another language), leaving the rest as is.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function encodeUrl($url)
+	{
+		return preg_replace_callback('/[^\x00-\x7F]+/', function ($m) { return rawurlencode($m[0]); }, $url);
+	}
+
+	/**
+	 * hreflang alternates of a page: array(array('hreflang' => 'en-GB', 'url' => 'http://...'), ...),
+	 * plus an "x-default" entry for the default language. Empty when there is only one language.
+	 *
+	 * @param callable $builder function($locale_id) returning the relative URL of the page in that language, or NULL to skip it
+	 * @access public
+	 * @return array
+	 */
+	public function buildAlternates($builder)
+	{
+		if (!$this->isMultiLang())
+		{
+			return array();
+		}
+		$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+		$default_id = $this->getDefaultLocaleId();
+		$alternates = array();
+		$default_url = NULL;
+		foreach ($this->getLocales() as $locale)
+		{
+			$url = $this->runInLocale($locale['id'], $builder);
+			if ($url === NULL || $url === '')
+			{
+				continue;
+			}
+			$url = $scheme . $_SERVER['HTTP_HOST'] . $this->encodeUrl($url);
+			$alternates[] = array('hreflang' => $locale['language_iso'], 'url' => $url);
+			if ((int) $locale['id'] === (int) $default_id)
+			{
+				$default_url = $url;
+			}
+		}
+		if ($default_url !== NULL)
+		{
+			$alternates[] = array('hreflang' => 'x-default', 'url' => $default_url);
+		}
+		return $alternates;
+	}
+
+	/**
+	 * Language code of the language being browsed, for og:locale (e.g. en_GB), or '' when
+	 * the multi-language mode is off.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function currentHtmlLocale()
+	{
+		if (!$this->isMultiLang())
+		{
+			return '';
+		}
+		foreach ($this->getLocales() as $locale)
+		{
+			if ((int) $locale['id'] === (int) $this->getLocaleId())
+			{
+				return str_replace('-', '_', $locale['language_iso']);
+			}
+		}
+		return '';
+	}
+
 	/**
 	 * Link to a single post. The JS embed (pjEmbed) overrides this with the
 	 * blog page URL + ?post=<url-slug>; this script-URL form is only used when
@@ -374,10 +950,11 @@ class pjAppController extends pjController
 	 *
 	 * @param array $arr Post row - must include 'id'
 	 * @param boolean $htmlEncode Use '&amp;' instead of '&' (for use inside an HTML attribute)
+	 * @param integer|NULL $locale_id Language of the link (current language by default). Pass a post row already translated to that language.
 	 * @access public
 	 * @return string
 	 */
-	public function postDetailUrl($arr, $htmlEncode = false)
+	public function postDetailUrl($arr, $htmlEncode = false, $locale_id = NULL)
 	{
 		$amp = $htmlEncode ? '&amp;' : '&';
 		$url = $_SERVER['SCRIPT_NAME'] . '?controller=pjLoad' . $amp . 'action=pjActionView' . $amp . 'id=' . (int) $arr['id'];
@@ -385,7 +962,7 @@ class pjAppController extends pjController
 		{
 			$url .= $amp . 'iframe';
 		}
-		return $url;
+		return $this->addLocaleToUrl($url, $htmlEncode, $locale_id);
 	}
 
 	/**
@@ -398,7 +975,7 @@ class pjAppController extends pjController
 	 * @access public
 	 * @return string
 	 */
-	public function categoryUrl($id, $htmlEncode = false)
+	public function categoryUrl($id, $htmlEncode = false, $locale_id = NULL)
 	{
 		$amp = $htmlEncode ? '&amp;' : '&';
 		$url = $_SERVER['SCRIPT_NAME'] . '?controller=pjLoad' . $amp . 'action=pjActionIndex' . $amp . 'category_id=' . (int) $id;
@@ -406,7 +983,7 @@ class pjAppController extends pjController
 		{
 			$url .= $amp . 'iframe';
 		}
-		return $url;
+		return $this->addLocaleToUrl($url, $htmlEncode, $locale_id);
 	}
 
 	public function getFromEmail()

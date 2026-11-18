@@ -22,19 +22,92 @@ class pjAdminCategories extends pjAdmin
 		
 		if ($this->isXHR())
 		{
-			if (!isset($_GET['category']) || empty($_GET['category']))
+			if (!isset($_GET['category']) || trim($_GET['category']) === '')
 			{
 				echo 'false';
 				exit;
 			}
-			$pjCategoryModel = pjCategoryModel::factory()->where('t1.category', $_GET['category']);
-			if (isset($_GET['id']) && (int) $_GET['id'] > 0)
+			$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+			$locale_id = isset($_GET['locale']) ? (int) $_GET['locale'] : 0;
+			if ($locale_id > 0 && $this->isMultiLang() && $locale_id !== (int) $this->getDefaultLocaleId())
 			{
-				$pjCategoryModel->where('t1.id !=', $_GET['id']);
+				// another language: the name has to be unique inside that language
+				$pjMultiLangModel = pjMultiLangModel::factory()
+					->where('t1.model', 'pjCategory')
+					->where('t1.field', 'category')
+					->where('t1.locale', $locale_id)
+					->where('t1.content', $_GET['category']);
+				if ($id > 0)
+				{
+					$pjMultiLangModel->where('t1.foreign_id !=', $id);
+				}
+				echo $pjMultiLangModel->findCount()->getData() == 0 ? 'true' : 'false';
+				exit;
+			}
+			$pjCategoryModel = pjCategoryModel::factory()->where('t1.category', $_GET['category']);
+			if ($id > 0)
+			{
+				$pjCategoryModel->where('t1.id !=', $id);
 			}
 			echo $pjCategoryModel->findCount()->getData() == 0 ? 'true' : 'false';
 		}
 		exit;
+	}
+	
+	/**
+	 * Language-aware list of the languages of the add/edit forms.
+	 */
+	private function setLocaleForm()
+	{
+		$lp_arr = array();
+		$locale_str = array();
+		foreach ($this->getLocales() as $item)
+		{
+			$lp_arr[] = $item;
+			$locale_str[$item['id'] . '_'] = $item['file'];
+		}
+		$this->set('lp_arr', $lp_arr);
+		$this->set('locale_str', pjAppController::jsonEncode($locale_str));
+		$this->set('default_locale_id', $this->getDefaultLocaleId());
+	}
+	
+	/**
+	 * Read the translations of the submitted form (i18n[locale][field]) and save them.
+	 * The default language also goes to the original columns, which stay the fallback.
+	 *
+	 * @return array The default-language values (for the original columns), or NULL when the form has no language fields
+	 */
+	private function saveCategoryI18n($id, $i18n)
+	{
+		$default_id = (int) $this->getDefaultLocaleId();
+		$default_values = NULL;
+		foreach ($this->getLocales() as $locale)
+		{
+			$lid = (int) $locale['id'];
+			if (!isset($i18n[$lid]) || !is_array($i18n[$lid]))
+			{
+				continue;
+			}
+			$values = array();
+			foreach (pjAppController::$translatable['pjCategory'] as $field)
+			{
+				if (isset($i18n[$lid][$field]))
+				{
+					$values[$field] = $field === 'category' ? trim($i18n[$lid][$field]) : $i18n[$lid][$field];
+				}
+			}
+			if ($lid === $default_id)
+			{
+				$default_values = $values;
+				// the default-language URL slug lives in the original column only
+				unset($values['url_slug']);
+			} elseif (isset($values['url_slug']))
+			{
+				$values['url_slug'] = $this->translatedSlug('pjCategory', $id, $lid, $values['url_slug'], isset($values['category']) ? $values['category'] : '');
+			}
+			$this->saveTranslation('pjCategory', $id, $lid, $values);
+		}
+		return $default_values;
 	}
 	
 	public function pjActionCreate()
@@ -45,6 +118,17 @@ class pjAdminCategories extends pjAdmin
 		{
 			if (isset($_POST['category_create']))
 			{
+				$default_id = (int) $this->getDefaultLocaleId();
+				$i18n = isset($_POST['i18n']) && is_array($_POST['i18n']) ? $_POST['i18n'] : NULL;
+				if (!is_null($i18n))
+				{
+					// the default language fills the original columns (the fallback)
+					$default_values = isset($i18n[$default_id]) && is_array($i18n[$default_id]) ? $i18n[$default_id] : array();
+					foreach (pjAppController::$translatable['pjCategory'] as $field)
+					{
+						$_POST[$field] = isset($default_values[$field]) ? $default_values[$field] : '';
+					}
+				}
 				// A category name of only whitespace (or empty) isn't a real
 				// name - reject it instead of silently saving blank-looking
 				// rows (see pjActionUpdate() and pjActionSaveCategory() below
@@ -61,6 +145,10 @@ class pjAdminCategories extends pjAdmin
 					$id = pjCategoryModel::factory($_POST)->insert()->getInsertId();
 					if ($id !== false && (int) $id > 0)
 					{
+						if (!is_null($i18n))
+						{
+							$this->saveCategoryI18n($id, $i18n);
+						}
 						if ($slugTaken)
 						{
 							// Saved with a slug from the name: open it so the
@@ -74,8 +162,10 @@ class pjAdminCategories extends pjAdmin
 				}
 				pjUtil::redirect($_SERVER['PHP_SELF'] . "?controller=pjAdminCategories&action=pjActionIndex&err=$err");
 			} else {
+				$this->setLocaleForm();
 				
 				$this->appendJs('jquery.validate.min.js', PJ_THIRD_PARTY_PATH . 'validate/');
+				$this->appendJs('jquery.multilang.js', PJ_FRAMEWORK_LIBS_PATH . 'pj/js/');
 				$this->appendJs('pjAdminCategories.js');
 				$this->appendJs('pjAdminSlug.js');
 				$this->appendJs('index.php?controller=pjAdmin&action=pjActionMessages', PJ_INSTALL_URL, true);
@@ -109,6 +199,7 @@ class pjAdminCategories extends pjAdmin
 				pjPostModel::factory()->where('category_id', $id)->eraseAll();
 				pjCommentModel::factory()->where('category_id', $id)->eraseAll();
 				pjVoteModel::factory()->where('category_id', $id)->eraseAll();
+				$this->eraseTranslations('pjCategory', $id);
 				$response['code'] = 200;
 			} else {
 				$response['code'] = 100;
@@ -139,6 +230,7 @@ class pjAdminCategories extends pjAdmin
 					pjCategoryModel::factory()->whereIn('id', $deletable)->eraseAll();
 					pjCommentModel::factory()->whereIn('category_id', $deletable)->eraseAll();
 					pjVoteModel::factory()->whereIn('category_id', $deletable)->eraseAll();
+					$this->eraseTranslations('pjCategory', $deletable);
 				}
 			}
 		}
@@ -156,7 +248,12 @@ class pjAdminCategories extends pjAdmin
 			if (isset($_GET['q']) && !empty($_GET['q']))
 			{
 				$q = pjObject::escapeString($_GET['q']);
-				$pjCategoryModel->where('t1.category LIKE', "%$q%");
+				if ($this->isMultiLang() && $this->getLocaleId())
+				{
+					$pjCategoryModel->where("(t1.category LIKE '%$q%' OR t1.id IN (SELECT TL.foreign_id FROM `".pjMultiLangModel::factory()->getTable()."` AS TL WHERE TL.model='pjCategory' AND TL.field='category' AND TL.locale='".(int) $this->getLocaleId()."' AND TL.content LIKE '%$q%'))");
+				} else {
+					$pjCategoryModel->where('t1.category LIKE', "%$q%");
+				}
 			}
 
 			$column = 'category';
@@ -179,6 +276,7 @@ class pjAdminCategories extends pjAdmin
 			
 			$data = $pjCategoryModel->select('t1.*')
 				->orderBy("$column $direction")->limit($rowCount, $offset)->findAll()->getData();
+			$data = $this->translateRows($data, 'pjCategory');
 				
 			pjAppController::jsonResponse(compact('data', 'total', 'pages', 'page', 'rowCount', 'column', 'direction'));
 		}
@@ -205,6 +303,9 @@ class pjAdminCategories extends pjAdmin
 	
 		if ($this->isXHR())
 		{
+			$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+			$locale_id = $this->isMultiLang() ? (int) $this->getLocaleId() : 0;
+			$is_default = $locale_id === 0 || $locale_id === (int) $this->getDefaultLocaleId();
 			if($_POST['column'] == 'category')
 			{
 				// Trim first so "   " (or "  Generation  ") can't be saved
@@ -214,24 +315,36 @@ class pjAdminCategories extends pjAdmin
 				$value = trim($_POST['value']);
 				if($value != '')
 				{
-					$pjCategoryModel = pjCategoryModel::factory();
-					
-					$check = $pjCategoryModel->where('t1.category', $value)->findCount()->getData() == 0 ? true : false;
-					if($check == true)
+					if ($is_default)
 					{
 						// Inline rename: the URL slug stays; a category without
 						// one gets one from the new name.
 						$data = array($_POST['column'] => $value);
-						$slug = $this->pjSlugForRename('pjCategoryModel', (int) $_GET['id'], $value);
+						$slug = $this->pjSlugForRename('pjCategoryModel', $id, $value);
 						if ($slug !== null)
 						{
 							$data['url_slug'] = $slug;
 						}
-						$pjCategoryModel->reset()->where('id', $_GET['id'])->limit(1)->modifyAll($data);
+						pjCategoryModel::factory()->where('id', $id)->limit(1)->modifyAll($data);
+						if ($locale_id > 0)
+						{
+							$this->saveTranslation('pjCategory', $id, $locale_id, array('category' => $value));
+						}
+					} else {
+						$this->saveTranslation('pjCategory', $id, $locale_id, array('category' => $value));
 					}
 				}
 			}else{
-				pjCategoryModel::factory()->where('id', $_GET['id'])->limit(1)->modifyAll(array($_POST['column'] => $_POST['value']));
+				if (in_array($_POST['column'], pjAppController::$translatable['pjCategory']) && !$is_default)
+				{
+					$this->saveTranslation('pjCategory', $id, $locale_id, array($_POST['column'] => $_POST['value']));
+				} else {
+					pjCategoryModel::factory()->where('id', $id)->limit(1)->modifyAll(array($_POST['column'] => $_POST['value']));
+					if ($locale_id > 0 && in_array($_POST['column'], pjAppController::$translatable['pjCategory']))
+					{
+						$this->saveTranslation('pjCategory', $id, $locale_id, array($_POST['column'] => $_POST['value']));
+					}
+				}
 			}
 		}
 		exit;
@@ -245,6 +358,17 @@ class pjAdminCategories extends pjAdmin
 		{
 			if (isset($_POST['category_update']))
 			{
+				$default_id = (int) $this->getDefaultLocaleId();
+				$i18n = isset($_POST['i18n']) && is_array($_POST['i18n']) ? $_POST['i18n'] : NULL;
+				if (!is_null($i18n))
+				{
+					// the default language fills the original columns (the fallback)
+					$default_values = isset($i18n[$default_id]) && is_array($i18n[$default_id]) ? $i18n[$default_id] : array();
+					foreach (pjAppController::$translatable['pjCategory'] as $field)
+					{
+						$_POST[$field] = isset($default_values[$field]) ? $default_values[$field] : '';
+					}
+				}
 				// Same blank-name guard as pjActionCreate() - don't let an
 				// edit silently blank out (or whitespace-pad) a category's
 				// name.
@@ -271,7 +395,10 @@ class pjAdminCategories extends pjAdmin
 						list($_POST['url_slug'], $slugTaken) = $this->pjSlugFromForm('pjCategoryModel', (int) $_POST['id'], $_POST['url_slug'], $category);
 					}
 					pjCategoryModel::factory()->where('id', $_POST['id'])->limit(1)->modifyAll($_POST);
-
+					if (!is_null($i18n))
+					{
+						$this->saveCategoryI18n((int) $_POST['id'], $i18n);
+					}
 					if ($slugTaken)
 					{
 						pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminCategories&action=pjActionUpdate&id=" . (int) $_POST['id'] . "&err=ACT10");
@@ -285,9 +412,12 @@ class pjAdminCategories extends pjAdmin
 					pjUtil::redirect(PJ_INSTALL_URL. "index.php?controller=pjAdminCategories&action=pjActionIndex&err=ACT08");
 				}
 				
+				$arr['i18n'] = $this->getTranslations('pjCategory', $arr['id']);
 				$this->set('arr', $arr);
+				$this->setLocaleForm();
 				
 				$this->appendJs('jquery.validate.min.js', PJ_THIRD_PARTY_PATH . 'validate/');
+				$this->appendJs('jquery.multilang.js', PJ_FRAMEWORK_LIBS_PATH . 'pj/js/');
 				$this->appendJs('pjAdminCategories.js');
 				$this->appendJs('pjAdminSlug.js');
 				$this->appendJs('index.php?controller=pjAdmin&action=pjActionMessages', PJ_INSTALL_URL, true);

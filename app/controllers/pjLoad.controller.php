@@ -32,6 +32,7 @@ class pjLoad extends pjFront
 		// SEO meta for the listing / category page is written by the JS embed
 		// (pjEmbed), not here.
 		$canonical_category = null;
+		$category_base = null;
 
 		$pjCategoryModel = pjCategoryModel::factory();
 		$pjPostModel = pjPostModel::factory();
@@ -41,7 +42,13 @@ class pjLoad extends pjFront
 		if(isset($_GET['dosearch'])){
 			if (isset($_GET['keyword']) && !empty($_GET['keyword'])){
 				$q = pjObject::escapeString($_GET['keyword']);
-				$pjPostModel->where("(t1.title LIKE '%$q%' OR t1.body LIKE '%$q%')");
+				$search_sql = "(t1.title LIKE '%$q%' OR t1.body LIKE '%$q%'";
+				if($this->isMultiLang() && $this->getLocaleId())
+				{
+					// also look in the text of the language being browsed
+					$search_sql .= " OR t1.id IN (SELECT TL.foreign_id FROM `".pjMultiLangModel::factory()->getTable()."` AS TL WHERE TL.model='pjPost' AND TL.locale='".(int) $this->getLocaleId()."' AND TL.field IN ('title','body') AND TL.content LIKE '%$q%')";
+				}
+				$pjPostModel->where($search_sql . ")");
 			}
 		}
 		if(isset($_GET['category_id']) && (int) $_GET['category_id'] > 0){
@@ -49,6 +56,8 @@ class pjLoad extends pjFront
 			$_arr = $pjCategoryModel->reset()->where('status', 'T')->find($category_id)->getData();
 			if(!empty($_arr))
 			{
+				$category_base = $_arr;
+				$_arr = $this->translateRow($_arr, 'pjCategory');
 				$pjPostModel->where('t1.category_id', $category_id);
 				$canonical_category = $_arr;
 			}
@@ -94,6 +103,7 @@ class pjLoad extends pjFront
 				->join('pjUser', 't1.author_id=t2.id', 'left')
 				->join('pjCategory', 't1.category_id=t3.id', 'left')
 				->orderBy("$column $direction")->limit($rowCount, $offset)->findAll()->getData();
+		$arr = $this->translatePostRows($arr);
 
 		// Real, single H1 for the listing page: the category name when
 		// filtering by category, otherwise the blog's own name (Site
@@ -290,6 +300,12 @@ class pjLoad extends pjFront
 					->find($_GET['id'])->getData();
 					
 				$category = pjCategoryModel::factory()->find($arr['category_id'])->getData();
+				$post_base = $arr;
+				if(!empty($arr))
+				{
+					$post_rows = $this->translatePostRows(array($arr));
+					$arr = $post_rows[0];
+				}
 					
 				if($arr['status'] == 'T' && ( ($arr['category_id'] > 0 && $category['status'] == 'T') || $arr['category_id'] == 0 ))
 				{
@@ -322,6 +338,7 @@ class pjLoad extends pjFront
 								->limit($number_of_related_posts)
 								->findAll()
 								->getData();
+							$related_arr = $this->translatePostRows($related_arr);
 						}else{
 							$related_arr = array();
 						}

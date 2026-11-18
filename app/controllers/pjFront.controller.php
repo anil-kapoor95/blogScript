@@ -161,7 +161,16 @@ class pjFront extends pjAppController
 				$_SESSION[$this->defaultTheme] = $theme;
 			}
 		}
+		// Language of this request: ?blog_lang=<language code> (the default language has no
+		// parameter, so the existing URLs do not change). It is read on every request - nothing is
+		// kept in the session - because the blog may be embedded in a page on another website.
+		$lang = isset($_GET['blog_lang']) ? $_GET['blog_lang'] : (isset($_GET['locale']) ? $_GET['locale'] : '');
+		if (count($this->getLocales()) > 0)
+		{
+			$this->setLocaleId($this->localeFromParam(is_scalar($lang) ? (string) $lang : ''));
+		}
 		$this->loadSetFields();
+		$this->translateOptions();
 		
 		$pjPostModel = pjPostModel::factory();
 		if(isset($_GET['category_id']) && (int) $_GET['category_id'] > 0)
@@ -223,6 +232,7 @@ class pjFront extends pjAppController
 			->where('status', 'T')
 			->findAll()
 			->getData();
+		$category_arr = $this->translateRows($category_arr, 'pjCategory');
 		
 		$this->set('current_year_arr', $current_year_arr);
 		$this->set('past_year_arr', $past_year_arr);

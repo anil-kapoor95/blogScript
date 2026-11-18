@@ -46,8 +46,8 @@ class pjEmbed extends pjLoad
 	/** Base URL for every blog link / canonical: Blog page URL, else host. */
 	protected $linkBase = '';
 
-	/** Active categories: id => public slug (lazy). */
-	private $categorySlugs = null;
+	/** Active categories: language id => (id => public slug), lazy. */
+	private $categorySlugs = array();
 
 	/** Install-code request that also carries the content (see pjPrefetchParams). */
 	private $prefetch = null;
@@ -61,6 +61,14 @@ class pjEmbed extends pjLoad
 		// pjFront code reads, BEFORE the parent builds the archive/category
 		// sidebars from $_GET.
 		$action = isset($_GET['action']) ? $_GET['action'] : '';
+		// The language is needed already here: the slugs of ?post= / ?blog_category= are looked up
+		// in the language of the page.
+		$this->option_arr = pjOptionModel::factory()->getPairs($this->getForeignId());
+		if (count($this->getLocales()) > 0)
+		{
+			$lang = isset($_GET['blog_lang']) && is_scalar($_GET['blog_lang']) ? (string) $_GET['blog_lang'] : '';
+			$this->setLocaleId($this->localeFromParam($lang));
+		}
 		if ($action == 'pjActionLoadJs')
 		{
 			$fixed = isset($_GET['post']) ? trim((string) $_GET['post']) : '';
@@ -125,7 +133,7 @@ class pjEmbed extends pjLoad
 		$query = array();
 		parse_str((string) parse_url($ref, PHP_URL_QUERY), $query);
 		$params = array();
-		foreach (array('post', 'blog_post_id', 'blog_category', 'blog_page', 'blog_search', 'blog_archive') as $k)
+		foreach (array('post', 'blog_post_id', 'blog_category', 'blog_page', 'blog_search', 'blog_archive', 'blog_lang') as $k)
 		{
 			if (isset($query[$k]) && is_string($query[$k]) && $query[$k] !== '')
 			{
@@ -139,7 +147,7 @@ class pjEmbed extends pjLoad
 			$single = true;
 		}
 		// Hand them to pjMapParams() / pjActionContentJs() like the content request.
-		foreach (array('post', 'blog_post_id', 'blog_category', 'blog_page', 'blog_search', 'blog_archive', 'single', 'err') as $k)
+		foreach (array('post', 'blog_post_id', 'blog_category', 'blog_page', 'blog_search', 'blog_archive', 'blog_lang', 'single', 'err') as $k)
 		{
 			unset($_GET[$k]);
 		}
@@ -197,6 +205,7 @@ class pjEmbed extends pjLoad
 				$cat = pjCategoryModel::factory()->where('status', 'T')->find((int) $_GET['category_id'])->getData();
 				if (!empty($cat))
 				{
+					$cat = $this->translateRow($cat, 'pjCategory');
 					$this->set('embedMeta', $this->pjCategoryMeta($cat));
 				}
 			}
@@ -223,26 +232,41 @@ class pjEmbed extends pjLoad
 	/**
 	 * Post link: <blog page>?post=<url-slug>.
 	 */
-	public function postDetailUrl($arr, $htmlEncode = false)
+	public function postDetailUrl($arr, $htmlEncode = false, $locale_id = NULL)
 	{
 		if ($this->linkBase === '')
 		{
-			return parent::postDetailUrl($arr, $htmlEncode);
+			return parent::postDetailUrl($arr, $htmlEncode, $locale_id);
 		}
-		return $this->pjLink(array('post' => $this->pjPostSlug($arr)), $htmlEncode);
+		return $this->pjLink($this->pjLangParams(array('post' => $this->pjPostSlug($arr)), $locale_id), $htmlEncode);
+	}
+
+	/**
+	 * The language parameter of a link: none for the default language (its links stay as they
+	 * always were), blog_lang=<language code> for every other language. $locale_id defaults to
+	 * the language of the page.
+	 */
+	private function pjLangParams($params, $locale_id = NULL)
+	{
+		$lang = $this->localeQuery($locale_id);
+		if ($lang !== '')
+		{
+			$params['blog_lang'] = $this->localeIso(is_null($locale_id) ? $this->getLocaleId() : $locale_id);
+		}
+		return $params;
 	}
 
 	/**
 	 * Category link: <blog page>?blog_category=<url-slug>.
 	 */
-	public function categoryUrl($id, $htmlEncode = false)
+	public function categoryUrl($id, $htmlEncode = false, $locale_id = NULL)
 	{
-		$slugs = $this->pjCategorySlugs();
+		$slugs = $this->pjCategorySlugs($locale_id);
 		if ($this->linkBase === '' || !isset($slugs[(int) $id]))
 		{
-			return parent::categoryUrl($id, $htmlEncode);
+			return parent::categoryUrl($id, $htmlEncode, $locale_id);
 		}
-		return $this->pjLink(array('blog_category' => $slugs[(int) $id]), $htmlEncode);
+		return $this->pjLink($this->pjLangParams(array('blog_category' => $slugs[(int) $id]), $locale_id), $htmlEncode);
 	}
 
 	/**
@@ -251,6 +275,10 @@ class pjEmbed extends pjLoad
 	 */
 	private function pjLink($params, $htmlEncode = false)
 	{
+		if (empty($params))
+		{
+			return $htmlEncode ? htmlspecialchars($this->linkBase, ENT_QUOTES, 'UTF-8') : $this->linkBase;
+		}
 		$q = array();
 		foreach ($params as $k => $v)
 		{
@@ -274,15 +302,17 @@ class pjEmbed extends pjLoad
 	}
 
 	/**
-	 * Active categories, id => public slug (stored url_slug, else
-	 * friendlyURL(name), else category-<id>).
+	 * Active categories, id => public slug in a language (stored url_slug of that language, else the
+	 * default-language url_slug, else friendlyURL(name), else category-<id>). Language = the page's by default.
 	 */
-	private function pjCategorySlugs()
+	private function pjCategorySlugs($locale_id = NULL)
 	{
-		if ($this->categorySlugs === null)
+		$key = (int) (is_null($locale_id) ? $this->getLocaleId() : $locale_id);
+		if (!isset($this->categorySlugs[$key]))
 		{
-			$this->categorySlugs = array();
+			$this->categorySlugs[$key] = array();
 			$rows = pjCategoryModel::factory()->select('t1.id, t1.category, t1.url_slug')->where('t1.status', 'T')->findAll()->getData();
+			$rows = $this->translateRows($rows, 'pjCategory', $key);
 			foreach ($rows as $r)
 			{
 				$slug = trim((string) $r['url_slug']);
@@ -290,10 +320,10 @@ class pjEmbed extends pjLoad
 				{
 					$slug = $this->friendlyURL(stripslashes((string) $r['category']));
 				}
-				$this->categorySlugs[(int) $r['id']] = $slug !== '' ? $slug : ('category-' . (int) $r['id']);
+				$this->categorySlugs[$key][(int) $r['id']] = $slug !== '' ? $slug : ('category-' . (int) $r['id']);
 			}
 		}
-		return $this->categorySlugs;
+		return $this->categorySlugs[$key];
 	}
 
 	/**
@@ -315,6 +345,16 @@ class pjEmbed extends pjLoad
 		if ($id !== false)
 		{
 			return (int) $id;
+		}
+		// The slug of another language (a shared link) opens the category too
+		foreach ($this->getLocales() as $locale)
+		{
+			$other = $this->pjCategorySlugs((int) $locale['id']);
+			$id = array_search($value, $other, true);
+			if ($id !== false)
+			{
+				return (int) $id;
+			}
 		}
 		return preg_match('/^category-(\d+)$/', $value, $m) && isset($slugs[(int) $m[1]]) ? (int) $m[1] : 0;
 	}
@@ -370,6 +410,15 @@ class pjEmbed extends pjLoad
 			}
 		}
 
+		// Language (multi-language blogs): kept in the internal links, so paging, search and
+		// archive links stay in the language of the page.
+		if (isset($_GET['blog_lang']) && is_string($_GET['blog_lang']) && preg_match('/^[A-Za-z0-9_-]{2,16}$/', $_GET['blog_lang']))
+		{
+			$q['blog_lang'] = $_GET['blog_lang'];
+		} else {
+			unset($_GET['blog_lang']);
+		}
+
 		if (isset($_GET['err']))
 		{
 			$_GET['err'] = (int) $_GET['err'];
@@ -391,6 +440,32 @@ class pjEmbed extends pjLoad
 		if ($slug === '')
 		{
 			return 0;
+		}
+		// A slug typed in the language of the page (or in another language: a shared link)
+		if (count($this->getLocales()) > 1)
+		{
+			$locales = array((int) $this->getLocaleId());
+			foreach ($this->getLocales() as $locale)
+			{
+				$locales[] = (int) $locale['id'];
+			}
+			foreach (array_unique($locales) as $lid)
+			{
+				$tr = pjMultiLangModel::factory()
+					->select('t1.foreign_id')
+					->where('t1.model', 'pjPost')
+					->where('t1.field', 'url_slug')
+					->where('t1.locale', $lid)
+					->where('t1.content', $slug)
+					->where('t1.foreign_id IN (SELECT P.id FROM `' . pjPostModel::factory()->getTable() . "` AS P WHERE P.status = 'T')")
+					->limit(1)
+					->findAll()
+					->getData();
+				if (!empty($tr))
+				{
+					return (int) $tr[0]['foreign_id'];
+				}
+			}
 		}
 		$pjPostModel = pjPostModel::factory();
 		$row = $pjPostModel
@@ -438,6 +513,9 @@ class pjEmbed extends pjLoad
 		$modified = !empty($arr['modified']) ? date('c', strtotime($arr['modified'])) : $published;
 
 		return array(
+			'alternates'     => $this->pjPostAlternates($arr),
+			'ogLocale'       => $this->currentHtmlLocale(),
+			'htmlLang'       => $this->pjHtmlLang(),
 			'title'          => $title,
 			'description'    => $description,
 			'keywords'       => $keywords,
@@ -468,9 +546,12 @@ class pjEmbed extends pjLoad
 			{
 				$params['blog_page'] = (int) $_GET['pjPage'];
 			}
-			$canonical = $this->pjLink($params);
+			$canonical = $this->pjLink($this->pjLangParams($params));
 		}
 		return array(
+			'alternates'  => $this->pjCategoryAlternates($cat),
+			'ogLocale'    => $this->currentHtmlLocale(),
+			'htmlLang'    => $this->pjHtmlLang(),
 			'title'       => trim(stripslashes((string) $cat['meta_title'])),
 			'description' => trim(preg_replace('/\s+/', ' ', strip_tags(stripslashes((string) $cat['meta_description'])))),
 			'keywords'    => trim(stripslashes((string) $cat['meta_keywords'])),
@@ -498,6 +579,120 @@ class pjEmbed extends pjLoad
 			$v = trim(stripslashes((string) $this->option_arr[$optionKey]));
 		}
 		return $v;
+	}
+
+	/**
+	 * <html lang> of the page in the language being browsed (e.g. fr-FR), or '' for a one-language blog.
+	 */
+	private function pjHtmlLang()
+	{
+		return $this->isMultiLang() ? $this->localeIso($this->getLocaleId()) : '';
+	}
+
+	/**
+	 * hreflang links of a post: the same post in every language, each with the slug of that language
+	 * (plus x-default = the default language). Empty for a one-language blog.
+	 */
+	private function pjPostAlternates($arr)
+	{
+		if (!$this->isMultiLang() || $this->linkBase === '' || empty($arr['id']))
+		{
+			return array();
+		}
+		$base = pjPostModel::factory()->find((int) $arr['id'])->getData();
+		if (empty($base))
+		{
+			return array();
+		}
+		$alternates = array();
+		$default = NULL;
+		foreach ($this->getLocales() as $locale)
+		{
+			$row = $this->translateRow($base, 'pjPost', (int) $locale['id']);
+			$url = $this->postDetailUrl($row, false, (int) $locale['id']);
+			$alternates[] = array('hreflang' => $locale['language_iso'], 'url' => $url);
+			if ((int) $locale['id'] === (int) $this->getDefaultLocaleId())
+			{
+				$default = $url;
+			}
+		}
+		if ($default !== NULL)
+		{
+			$alternates[] = array('hreflang' => 'x-default', 'url' => $default);
+		}
+		return $alternates;
+	}
+
+	/**
+	 * hreflang links of a category listing (same idea as pjPostAlternates()).
+	 */
+	private function pjCategoryAlternates($cat)
+	{
+		if (!$this->isMultiLang() || $this->linkBase === '' || empty($cat['id']))
+		{
+			return array();
+		}
+		$alternates = array();
+		$default = NULL;
+		foreach ($this->getLocales() as $locale)
+		{
+			$url = $this->categoryUrl((int) $cat['id'], false, (int) $locale['id']);
+			$alternates[] = array('hreflang' => $locale['language_iso'], 'url' => $url);
+			if ((int) $locale['id'] === (int) $this->getDefaultLocaleId())
+			{
+				$default = $url;
+			}
+		}
+		if ($default !== NULL)
+		{
+			$alternates[] = array('hreflang' => 'x-default', 'url' => $default);
+		}
+		return $alternates;
+	}
+
+	/**
+	 * Address of the page being shown, in another language (language switcher): the same post or
+	 * category with that language's slug, else the same list / search / archive / page.
+	 */
+	public function switchLocaleUrl($locale_id, $htmlEncode = false)
+	{
+		if ($this->linkBase === '')
+		{
+			return parent::switchLocaleUrl($locale_id, $htmlEncode);
+		}
+		$params = array();
+		$postId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+		if ($postId > 0)
+		{
+			$base = pjPostModel::factory()->find($postId)->getData();
+			if (!empty($base))
+			{
+				$row = $this->translateRow($base, 'pjPost', (int) $locale_id);
+				$params['post'] = $this->pjPostSlug($row);
+			}
+		} else {
+			if (isset($_GET['category_id']) && (int) $_GET['category_id'] > 0)
+			{
+				$slugs = $this->pjCategorySlugs((int) $locale_id);
+				if (isset($slugs[(int) $_GET['category_id']]))
+				{
+					$params['blog_category'] = $slugs[(int) $_GET['category_id']];
+				}
+			}
+			if (!empty($_GET['archive']))
+			{
+				$params['blog_archive'] = (string) $_GET['archive'];
+			}
+			if (!empty($_GET['keyword']))
+			{
+				$params['blog_search'] = (string) $_GET['keyword'];
+			}
+			if (isset($_GET['pjPage']) && (int) $_GET['pjPage'] > 1)
+			{
+				$params['blog_page'] = (int) $_GET['pjPage'];
+			}
+		}
+		return $this->pjLink($this->pjLangParams($params, (int) $locale_id), $htmlEncode);
 	}
 
 	/**

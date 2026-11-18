@@ -52,6 +52,12 @@ if (isset($tpl['status']))
 	
 	<form action="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminPosts&amp;action=pjActionUpdate" method="post" id="frmUpdatePost" class="form pj-form" enctype="multipart/form-data">
 		<input type="hidden" name="post_update" value="1" />
+		<input type="hidden" name="locale" value="<?php echo (int) $tpl['content_locale']; ?>" />
+		<?php
+		// Text fields of a language that is not the default one may stay empty (the default text is shown instead)
+		$is_default_content = (int) $tpl['content_locale'] === (int) $tpl['default_locale_id'];
+		include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php';
+		?>
 		<input type="hidden" name="id" value="<?php echo (int) $tpl['arr']['id']; ?>" />
 		<input type="hidden" name="tab_id" value="<?php echo isset($_GET['tab_id']) && !empty($_GET['tab_id']) ? $_GET['tab_id'] : 'tabs-1'; ?>" />
 		<div id="tabs">
@@ -143,7 +149,7 @@ if (isset($tpl['status']))
 				<p>
 					<label class="title110"><?php __('lblTitle', false, true); ?></label>
 					<span class="inline_block">
-						<input type="text" name="title" id="title" class="pj-form-field required w400 float_left r10" maxlength="200" value="<?php echo pjSanitize::html($tpl['arr']['title']);?>" />
+						<input type="text" name="title" id="title" class="pj-form-field<?php echo $is_default_content ? ' required' : NULL; ?> w400 float_left r10" maxlength="200" value="<?php echo pjSanitize::html($tpl['arr']['title']);?>" /><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input float_left r10"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 						<span class="post-rating">
 							<select name="rate">
 								<?php
@@ -164,7 +170,7 @@ if (isset($tpl['status']))
 				<p>
 					<label class="title110"><?php __('lblBody'); ?></label>
 					<span class="inline_block">
-						<textarea id="body" name="body" class="mceEditor" style="width: 600px; height: 250px"><?php echo !empty($tpl['arr']['body']) ? stripslashes($tpl['arr']['body']) : '';?></textarea>
+						<textarea id="body" name="body" class="mceEditor" style="width: 600px; height: 250px"><?php echo !empty($tpl['arr']['body']) ? stripslashes($tpl['arr']['body']) : '';?></textarea><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 					</span>
 				</p>
 				<p>
@@ -230,25 +236,25 @@ if (isset($tpl['status']))
 				<p>
 					<label class="title"><?php __('lblMetaTitle'); ?></label>
 					<span class="inline_block">
-						<input type="text" id="meta_title" name="meta_title" class="pj-form-field w500" value="<?php echo pjSanitize::html($tpl['arr']['meta_title']); ?>"/>
+						<input type="text" id="meta_title" name="meta_title" class="pj-form-field w500" value="<?php echo pjSanitize::html($tpl['arr']['meta_title']); ?>"/><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 					</span>
 				</p>
 				<p>
 					<label class="title"><?php __('lblMetaKeywords'); ?></label>
 					<span class="inline_block">
-						<input type="text" id="meta_keywords" name="meta_keywords" class="pj-form-field w500" value="<?php echo pjSanitize::html($tpl['arr']['meta_keywords']); ?>"/>
+						<input type="text" id="meta_keywords" name="meta_keywords" class="pj-form-field w500" value="<?php echo pjSanitize::html($tpl['arr']['meta_keywords']); ?>"/><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 					</span>
 				</p>
 				<p>
 					<label class="title"><?php __('lblMetaDescription'); ?></label>
 					<span class="inline_block">
-						<textarea id="meta_description" name="meta_description" class="pj-form-field w500 h150"><?php echo pjSanitize::html($tpl['arr']['meta_description']); ?></textarea>
+						<textarea id="meta_description" name="meta_description" class="pj-form-field w500 h150"><?php echo pjSanitize::html($tpl['arr']['meta_description']); ?></textarea><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 					</span>
 				</p>
 				<p>
 					<label class="title"><?php __('lblUrlSlug'); ?></label>
 					<span class="inline_block">
-						<input type="text" id="url_slug" name="url_slug" class="pj-form-field w500" maxlength="200" value="<?php echo pjSanitize::html($tpl['arr']['url_slug']); ?>" data-slug-source="#title" data-slug-url="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjAdminPosts&amp;action=pjActionCheckSlug" data-slug-id="<?php echo (int) $tpl['arr']['id']; ?>" data-slug-autofill="<?php echo trim((string) @$tpl['arr']['url_slug']) === '' ? '1' : '0'; ?>" data-msg-remote="<?php __('lblPostSlugTaken', false, true); ?>" placeholder="<?php __('hintPostSlugEditable', false, true); ?>" />
+						<input type="text" id="url_slug" name="url_slug" class="pj-form-field w500" maxlength="200" value="<?php echo pjSanitize::html($tpl['arr']['url_slug']); ?>" data-slug-source="#title" <?php if ($is_default_content) : ?>data-slug-url="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjAdminPosts&amp;action=pjActionCheckSlug"<?php endif; ?> data-slug-id="<?php echo (int) $tpl['arr']['id']; ?>" data-slug-autofill="<?php echo trim((string) @$tpl['arr']['url_slug']) === '' ? '1' : '0'; ?>" data-msg-remote="<?php __('lblPostSlugTaken', false, true); ?>" placeholder="<?php __('hintPostSlugEditable', false, true); ?>" /><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 					</span>
 				</p>
 				<p>

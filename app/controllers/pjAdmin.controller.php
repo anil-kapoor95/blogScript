@@ -217,7 +217,7 @@ class pjAdmin extends pjAppController
 			$this->set('cnt_waiting_comments', $cnt_waiting_comments);
 			$this->set('cnt_authors', $cnt_authors);
 
-			$this->set('post_arr', $post_arr);
+			$this->set('post_arr', $this->translateRows($post_arr, 'pjPost'));
 			$this->set('comment_arr', $comment_arr);
 			$this->set('author_arr', $author_arr);
 		} else {

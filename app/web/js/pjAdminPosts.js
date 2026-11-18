@@ -687,13 +687,20 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 			$("#category_id").chosen();
 			$("#author_id").chosen();
 		}
+		// The URL slug must be free - checked only for the default language (the slug of another
+		// language is made unique by the server; its input has no data-slug-url)
+		function slugRules($form, id) {
+			var rules = {};
+			if ($form.find("#url_slug[data-slug-url]").length) {
+				rules["url_slug"] = {
+					remote: "index.php?controller=pjAdminPosts&action=pjActionCheckSlug&id=" + id
+				};
+			}
+			return rules;
+		}
 		if ($frmCreatePost.length > 0 && validate) {
 			$frmCreatePost.validate({
-				rules: {
-					"url_slug": {
-						remote: "index.php?controller=pjAdminPosts&action=pjActionCheckSlug&id=0"
-					}
-				},
+				rules: slugRules($frmCreatePost, "0"),
 				messages:{
 					"category_id": {
 						required: myLabel.field_required
@@ -716,11 +723,7 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 		}
 		if ($frmUpdatePost.length > 0 && validate) {
 			$frmUpdatePost.validate({
-				rules: {
-					"url_slug": {
-						remote: "index.php?controller=pjAdminPosts&action=pjActionCheckSlug&id=" + $frmUpdatePost.find("input[name='id']").val()
-					}
-				},
+				rules: slugRules($frmUpdatePost, $frmUpdatePost.find("input[name='id']").val()),
 				messages:{
 					"category_id": {
 						required: myLabel.field_required

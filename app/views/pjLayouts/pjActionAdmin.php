@@ -3,6 +3,7 @@
 	<head>
 		<title>Php Blog Script by PHPJabbers.com</title>
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<?php
 		//Local CSS/JS get "?v=<file modified time>" appended so a browser
 		// that cached an older copy re-fetches it as soon as the file changes

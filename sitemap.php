@@ -54,10 +54,67 @@ if ($base !== '' && !preg_match('~^https?://[^\s"\'<>`\\\\]+$~i', $base))
 	$base = '';
 }
 
-$urls = array();
+// Languages: when the multi-language mode is on, every page is listed once per language
+// (with <xhtml:link> alternates) - the default language at its usual address, the others with
+// ?blog_lang=<language code> and that language's own slug.
+$locales = array();
+$res = mysqli_query($link, "SELECT `id`, `language_iso`, `is_default` FROM `{$prefix}plugin_locale` ORDER BY `sort` ASC, `id` ASC");
+while ($res && ($l = mysqli_fetch_assoc($res)))
+{
+	$locales[(int) $l['id']] = $l;
+}
+$res = mysqli_query($link, "SELECT `value` FROM `{$prefix}options` WHERE `foreign_id` = 1 AND `key` = 'o_multi_lang' LIMIT 1");
+$row = $res ? mysqli_fetch_assoc($res) : null;
+$multi = $row && substr((string) $row['value'], -3) === '::1' && count($locales) > 1;
+$default_lid = 0;
+foreach ($locales as $lid => $l)
+{
+	if ((int) $l['is_default'] === 1) { $default_lid = $lid; }
+}
+if (!$default_lid && !empty($locales)) { reset($locales); $default_lid = key($locales); }
+$tr = array(); // $tr[model][foreign_id][locale][field] = content
+if ($multi)
+{
+	$res = mysqli_query($link, "SELECT `model`, `foreign_id`, `locale`, `field`, `content` FROM `{$prefix}multi_lang`
+		WHERE `model` IN ('pjCategory', 'pjPost') AND `field` IN ('url_slug', 'category', 'title') AND `content` IS NOT NULL AND `content` <> ''");
+	while ($res && ($t = mysqli_fetch_assoc($res)))
+	{
+		$tr[$t['model']][(int) $t['foreign_id']][(int) $t['locale']][$t['field']] = $t['content'];
+	}
+}
+
+// <Blog page URL> + parameter(s) for a language (nothing extra for the default language).
+function pj_sitemap_loc($base, $key, $value, $lid, $multi, $default_lid, $locales)
+{
+	$url = $key === '' ? $base : pj_sitemap_url($base, $key, $value);
+	if ($multi && $lid !== $default_lid)
+	{
+		$url .= (strpos($url, '?') === false ? '?' : '&') . 'blog_lang=' . rawurlencode($locales[$lid]['language_iso']);
+	}
+	return $url;
+}
+
+// Entries: array(array(locale id => array('loc' =>, 'lastmod' =>)))
+$entries = array();
+function pj_sitemap_add(&$entries, $base, $key, $slugs, $lastmod, $multi, $default_lid, $locales)
+{
+	$entry = array();
+	foreach ($multi ? array_keys($locales) : array($default_lid) as $lid)
+	{
+		$slug = isset($slugs[$lid]) && $slugs[$lid] !== '' ? $slugs[$lid] : $slugs[$default_lid];
+		$entry[$lid] = array('loc' => pj_sitemap_loc($base, $key, $slug, $lid, $multi, $default_lid, $locales), 'lastmod' => $lastmod);
+	}
+	$entries[] = $entry;
+}
+
 if ($base !== '')
 {
-	$urls[] = array('loc' => $base, 'lastmod' => null);
+	$entry = array();
+	foreach ($multi ? array_keys($locales) : array(0) as $lid)
+	{
+		$entry[$lid] = array('loc' => pj_sitemap_loc($base, '', '', $lid, $multi, $default_lid, $locales), 'lastmod' => null);
+	}
+	$entries[] = $entry;
 
 	$cat_res = mysqli_query($link, "SELECT c.`id`, c.`category`, c.`url_slug` FROM `{$prefix}categories` AS c
 		WHERE c.`status` = 'T' AND EXISTS (SELECT 1 FROM `{$prefix}posts` AS p WHERE p.`category_id` = c.`id` AND p.`status` = 'T')");
@@ -74,7 +131,21 @@ if ($base !== '')
 			{
 				$slug = 'category-' . (int) $cat['id'];
 			}
-			$urls[] = array('loc' => pj_sitemap_url($base, 'blog_category', $slug), 'lastmod' => null);
+			$slugs = array($default_lid => $slug);
+			if ($multi)
+			{
+				foreach ($locales as $lid => $l)
+				{
+					$t = isset($tr['pjCategory'][(int) $cat['id']][$lid]) ? $tr['pjCategory'][(int) $cat['id']][$lid] : array();
+					$s = isset($t['url_slug']) ? trim($t['url_slug']) : '';
+					if ($s === '' && isset($t['category']))
+					{
+						$s = pj_sitemap_friendly_url(stripslashes($t['category']));
+					}
+					if ($lid !== $default_lid) { $slugs[$lid] = $s; }
+				}
+			}
+			pj_sitemap_add($entries, $base, 'blog_category', $slugs, null, $multi, $default_lid, $locales);
 		}
 	}
 
@@ -97,7 +168,21 @@ if ($base !== '')
 				$slug = 'post-' . (int) $post['id'];
 			}
 			$lastmod_raw = !empty($post['modified']) ? $post['modified'] : $post['published_date'];
-			$urls[] = array('loc' => pj_sitemap_url($base, 'post', $slug), 'lastmod' => !empty($lastmod_raw) ? date('c', strtotime($lastmod_raw)) : null);
+			$slugs = array($default_lid => $slug);
+			if ($multi)
+			{
+				foreach ($locales as $lid => $l)
+				{
+					$t = isset($tr['pjPost'][(int) $post['id']][$lid]) ? $tr['pjPost'][(int) $post['id']][$lid] : array();
+					$s = isset($t['url_slug']) ? trim($t['url_slug']) : '';
+					if ($s === '' && isset($t['title']))
+					{
+						$s = pj_sitemap_friendly_url(stripslashes($t['title']));
+					}
+					if ($lid !== $default_lid) { $slugs[$lid] = $s; }
+				}
+			}
+			pj_sitemap_add($entries, $base, 'post', $slugs, !empty($lastmod_raw) ? date('c', strtotime($lastmod_raw)) : null, $multi, $default_lid, $locales);
 		}
 	}
 }
@@ -105,16 +190,27 @@ if ($base !== '')
 mysqli_close($link);
 
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-foreach ($urls as $u)
+echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . ($multi ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : '') . '>' . "\n";
+foreach ($entries as $entry)
 {
-	echo "\t<url>\n";
-	echo "\t\t<loc>" . htmlspecialchars($u['loc'], ENT_QUOTES, 'UTF-8') . "</loc>\n";
-	if (!empty($u['lastmod']))
+	foreach ($entry as $lid => $u)
 	{
-		echo "\t\t<lastmod>" . htmlspecialchars($u['lastmod'], ENT_QUOTES, 'UTF-8') . "</lastmod>\n";
+		echo "\t<url>\n";
+		echo "\t\t<loc>" . htmlspecialchars($u['loc'], ENT_QUOTES, 'UTF-8') . "</loc>\n";
+		if (!empty($u['lastmod']))
+		{
+			echo "\t\t<lastmod>" . htmlspecialchars($u['lastmod'], ENT_QUOTES, 'UTF-8') . "</lastmod>\n";
+		}
+		if ($multi)
+		{
+			foreach ($entry as $other_lid => $other)
+			{
+				echo "\t\t" . '<xhtml:link rel="alternate" hreflang="' . htmlspecialchars($locales[$other_lid]['language_iso'], ENT_QUOTES, 'UTF-8') . '" href="' . htmlspecialchars($other['loc'], ENT_QUOTES, 'UTF-8') . '" />' . "\n";
+			}
+			echo "\t\t" . '<xhtml:link rel="alternate" hreflang="x-default" href="' . htmlspecialchars($entry[$default_lid]['loc'], ENT_QUOTES, 'UTF-8') . '" />' . "\n";
+		}
+		echo "\t</url>\n";
 	}
-	echo "\t</url>\n";
 }
 echo '</urlset>' . "\n";
 ?>

@@ -34,7 +34,7 @@
 	PJBLOG.__v = 1;
 
 	var head = document.head || document.getElementsByTagName('head')[0];
-	var KEYS = ['post', 'blog_post_id', 'blog_category', 'blog_page', 'blog_search', 'blog_archive'];
+	var KEYS = ['post', 'blog_post_id', 'blog_category', 'blog_page', 'blog_search', 'blog_archive', 'blog_lang'];
 	var state = { boot: null, host: null, params: {}, render: null };
 
 	/* ---- helpers ------------------------------------------------------- */
@@ -90,7 +90,10 @@
 	}
 
 	function hostUrl(params) {
-		var q = buildQuery(params || {}), base = linkBase();
+		params = params || {};
+		// The language of the page stays when a link does not set its own.
+		if (params.blog_lang === undefined && state.lang) { params.blog_lang = state.lang; }
+		var q = buildQuery(params), base = linkBase();
 		return base + (q ? (base.indexOf('?') === -1 ? '?' : '&') + q : '');
 	}
 
@@ -208,6 +211,17 @@
 			function (el) { el.setAttribute('href', href); },
 			function () { var l = document.createElement('link'); l.setAttribute('rel', 'canonical'); l.setAttribute('href', href); return l; });
 	}
+	// Same page in the other languages (multi-language blogs): one link per language.
+	function setAlternates(list) {
+		var old = document.querySelectorAll('link[data-pjbl-alt]');
+		for (var i = 0; i < old.length; i++) { if (old[i].parentNode) { old[i].parentNode.removeChild(old[i]); } }
+		for (var j = 0; list && j < list.length; j++) {
+			var l = document.createElement('link');
+			l.setAttribute('rel', 'alternate'); l.setAttribute('hreflang', list[j].hreflang); l.setAttribute('href', list[j].url);
+			l.setAttribute('data-pjbl-alt', '1');
+			head.appendChild(l);
+		}
+	}
 	function setSchema(m) {
 		var old = document.querySelectorAll('script[data-pjbl-schema]');
 		for (var i = 0; i < old.length; i++) { if (old[i].parentNode) { old[i].parentNode.removeChild(old[i]); } }
@@ -235,6 +249,8 @@
 		setMeta('name', 'description', m.description);
 		setMeta('name', 'keywords', m.keywords);
 		setCanonical(m.canonical);
+		setAlternates(m.alternates);
+		if (m.htmlLang) { document.documentElement.setAttribute('lang', m.htmlLang); }
 		// Open Graph / Twitter / schema mirror the title & description the page
 		// actually ends up with, so og:title always matches <title>.
 		var dm = document.querySelector('meta[name="description"]');
@@ -244,6 +260,7 @@
 		setMeta('property', 'og:title', m.title);
 		setMeta('property', 'og:description', m.description);
 		setMeta('property', 'og:url', m.canonical);
+		setMeta('property', 'og:locale', m.ogLocale);
 		setMeta('property', 'og:image', m.ogImage);
 		setMeta('property', 'og:site_name', m.siteName);
 		setMeta('property', 'article:published_time', m.publishedTime);
@@ -263,8 +280,9 @@
 		if (!href || href.indexOf('controller=pjLoad') === -1) { return null; }
 		var i = href.indexOf('?');
 		var q = parseQuery(i === -1 ? '' : href.substring(i + 1).replace(/#.*$/, '').replace(/&amp;/g, '&'));
-		if (q.action === 'pjActionView' && q.id) { return hostUrl({ blog_post_id: q.id }); }
+		if (q.action === 'pjActionView' && q.id) { return hostUrl({ blog_post_id: q.id, blog_lang: q.blog_lang }); }
 		return hostUrl({
+			blog_lang: q.blog_lang,
 			blog_category: q.blog_category || q.category_id,
 			blog_page: q.pjPage,
 			blog_search: q.keyword,
@@ -291,7 +309,8 @@
 		return {
 			blog_search: f.keyword ? f.keyword.value : '',
 			blog_category: f.category_id ? f.category_id.value : '',
-			blog_archive: archive !== undefined ? archive : (f.archive ? f.archive.value : '')
+			blog_archive: archive !== undefined ? archive : (f.archive ? f.archive.value : ''),
+			blog_lang: f.blog_lang ? f.blog_lang.value : undefined
 		};
 	}
 
@@ -325,11 +344,15 @@
 		start(function () {
 			state.host = resolveHost(CFG.host || 'pjBlogEmbed', selfScript);
 			state.params = pageParams();
+			// Language of this page (empty = the default language).
+			state.lang = state.params.blog_lang || '';
 			// Single-post install code (&post=<slug> on the script URL): show that
 			// post unless this page URL asks for something else.
 			state.single = false;
-			if (CFG.post && buildQuery(state.params) === '') {
+			var onlyLang = (function () { var o = {}; for (var k in state.params) { if (k !== 'blog_lang') { o[k] = state.params[k]; } } return buildQuery(o) === ''; })();
+			if (CFG.post && onlyLang) {
 				state.params = { post: CFG.post };
+				if (state.lang) { state.params.blog_lang = state.lang; }
 				state.single = true;
 			}
 			// Search box (Enter): open the results on this page.
@@ -392,4 +415,11 @@
 		};
 		xhr.send(new FormData(form));
 	};
+	// Language dropdown: close it when clicking elsewhere.
+	document.addEventListener('click', function (e) {
+		var open = document.querySelectorAll('details.pjBlLang[open]'), k;
+		for (k = 0; k < open.length; k++) {
+			if (!open[k].contains(e.target)) { open[k].removeAttribute('open'); }
+		}
+	}, false);
 })();

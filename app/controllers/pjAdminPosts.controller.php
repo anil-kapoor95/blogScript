@@ -16,6 +16,41 @@ class pjAdminPosts extends pjAdmin
 		$this->pjSlugResponse('pjPostModel');
 	}
 
+	/**
+	 * Language the add/edit form works in: ?locale=ID / the hidden "locale" field, else the default language.
+	 */
+	private function getContentLocale()
+	{
+		$requested = isset($_POST['locale']) ? $_POST['locale'] : (isset($_GET['locale']) ? $_GET['locale'] : 0);
+		return $this->isMultiLang() ? $this->validLocaleId($requested) : $this->getDefaultLocaleId();
+	}
+	
+	/**
+	 * Languages for the add/edit form and its language bar.
+	 */
+	private function setLocaleForm($content_locale)
+	{
+		$this->set('lp_arr', $this->getLocales());
+		$this->set('content_locale', $content_locale);
+		$this->set('default_locale_id', $this->getDefaultLocaleId());
+	}
+	
+	/**
+	 * Values of the translatable fields of the submitted form.
+	 */
+	private function getSubmittedTranslation()
+	{
+		$values = array();
+		foreach (pjAppController::$translatable['pjPost'] as $field)
+		{
+			if (isset($_POST[$field]))
+			{
+				$values[$field] = $_POST[$field];
+			}
+		}
+		return $values;
+	}
+	
 	public function pjActionIndex()
 	{
 		$this->checkLogin();
@@ -45,6 +80,10 @@ class pjAdminPosts extends pjAdmin
 				$q = pjObject::escapeString($_GET['q']);
 				$pjPostModel->where('t1.title LIKE', "%$q%");
 				$pjPostModel->orWhere('t1.body LIKE', "%$q%");
+				if ($this->isMultiLang() && $this->getLocaleId())
+				{
+					$pjPostModel->orWhere("t1.id IN (SELECT TL.foreign_id FROM `".pjMultiLangModel::factory()->getTable()."` AS TL WHERE TL.model='pjPost' AND TL.locale='".(int) $this->getLocaleId()."' AND TL.field IN ('title','body') AND TL.content LIKE '%$q%')");
+				}
 			}
 			if (isset($_GET['title']) && !empty($_GET['title']))
 			{
@@ -105,6 +144,7 @@ class pjAdminPosts extends pjAdmin
 			$data = array();
 			$arr = $pjPostModel->select('t1.*, (SELECT COUNT(TC.post_id) FROM `'.pjCommentModel::factory()->getTable().'` AS TC WHERE t1.id = TC.post_id) AS `cnt_comments`')
 				->orderBy("$column $direction")->limit($rowCount, $offset)->findAll()->getData();
+			$arr = $this->translateRows($arr, 'pjPost');
 
 			foreach($arr as $k => $v){
 				$v['published_date'] = pjUtil::formatDate(date('Y-m-d', strtotime($v['published_date'])), 'Y-m-d', $this->option_arr['o_date_format']);
@@ -137,9 +177,16 @@ class pjAdminPosts extends pjAdmin
 				// URL slug from the form (filled in from the title, editable); a
 				// slug already used by another post is not saved (AP12).
 				list($_POST['url_slug'], $slugTaken) = $this->pjSlugFromForm('pjPostModel', 0, isset($_POST['url_slug']) ? $_POST['url_slug'] : '', isset($_POST['title']) ? $_POST['title'] : '');
+				// The text is also kept in the original columns (the fallback shown when a
+				// language has no translation); the chosen language gets its own copy.
+				$content_locale = $this->getContentLocale();
 				$id = $pjPostModel->setAttributes(array_merge($data, $_POST))->insert()->getInsertId();
 				if ($id !== false && (int) $id > 0)
 				{
+					if ($content_locale)
+					{
+						$this->saveTranslation('pjPost', $id, $content_locale, $this->getSubmittedTranslation());
+					}
 					$img_err = '';
 					if (isset($_FILES['image']))
 					{
@@ -219,7 +266,9 @@ class pjAdminPosts extends pjAdmin
 				// offered here (see pjActionUpdate() below for the edit-form
 				// version of this, which has to also keep whatever category
 				// the post already has).
-				$this->set('category_arr', pjCategoryModel::factory()->where('t1.status', 'T')->orderBy('t1.category ASC')->findAll()->getData());
+				$content_locale = $this->getContentLocale();
+				$this->setLocaleForm($content_locale);
+				$this->set('category_arr', $this->translateRows(pjCategoryModel::factory()->where('t1.status', 'T')->orderBy('t1.category ASC')->findAll()->getData(), 'pjCategory', $content_locale));
 				$this->set('author_arr', pjUserModel::factory()->orderBy('t1.name ASC')->findAll()->getData());
 
 				$this->appendJs('tinymce.min.js', PJ_THIRD_PARTY_PATH . 'tinymce/');
@@ -261,7 +310,12 @@ class pjAdminPosts extends pjAdmin
 				// another post is not saved - everything else is, and the same
 				// page shows AP12.
 				$slugTaken = false;
-				if (isset($_POST['url_slug']))
+				$edit_locale = $this->getContentLocale();
+				if (isset($_POST['url_slug']) && $edit_locale && $edit_locale !== (int) $this->getDefaultLocaleId())
+				{
+					// another language: the slug is that language's own (saved with its translation)
+					$_POST['url_slug'] = $this->translatedSlug('pjPost', isset($_POST['id']) ? (int) $_POST['id'] : 0, $edit_locale, $_POST['url_slug'], isset($_POST['title']) ? $_POST['title'] : '');
+				} elseif (isset($_POST['url_slug']))
 				{
 					list($_POST['url_slug'], $slugTaken) = $this->pjSlugFromForm('pjPostModel', isset($_POST['id']) ? (int) $_POST['id'] : 0, $_POST['url_slug'], isset($_POST['title']) ? $_POST['title'] : '');
 				}
@@ -323,20 +377,36 @@ class pjAdminPosts extends pjAdmin
 							$img_err = 'The server is missing the PHP GD extension needed to process images.';
 						}
 					}else if($_FILES['image']['error'] != 4){
-						pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminPosts&action=pjActionUpdate&id=".$_POST['id']."&tab_id=" . $_POST['tab_id']."&err=AP10");
+						pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminPosts&action=pjActionUpdate&id=".$_POST['id'].($this->getContentLocale() ? '&locale=' . $this->getContentLocale() : '')."&tab_id=" . $_POST['tab_id']."&err=AP10");
 					}
 				}
-				$pjPostModel->reset()->where('id', $_POST['id'])->limit(1)->modifyAll(array_merge($_POST, $data));
+				// The default language is also written to the original columns (the fallback);
+				// another language only changes its own translation.
+				$content_locale = $this->getContentLocale();
+				$save_data = array_merge($_POST, $data);
+				if ($content_locale && $content_locale !== (int) $this->getDefaultLocaleId())
+				{
+					foreach (pjAppController::$translatable['pjPost'] as $field)
+					{
+						unset($save_data[$field]);
+					}
+				}
+				$pjPostModel->reset()->where('id', $_POST['id'])->limit(1)->modifyAll($save_data);
+				if ($content_locale)
+				{
+					$this->saveTranslation('pjPost', (int) $_POST['id'], $content_locale, $this->getSubmittedTranslation());
+				}
+				$locale_param = $content_locale ? '&locale=' . $content_locale : '';
 
 				if (!empty($img_err))
 				{
-					pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminPosts&action=pjActionUpdate&id=".$_POST['id']."&tab_id=" . $_POST['tab_id']."&err=AP11&img_err=" . urlencode($img_err));
+					pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminPosts&action=pjActionUpdate&id=".$_POST['id'].$locale_param."&tab_id=" . $_POST['tab_id']."&err=AP11&img_err=" . urlencode($img_err));
 				}
 				if ($slugTaken)
 				{
 					$err = 'AP12';
 				}
-				pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminPosts&action=pjActionUpdate&id=".$_POST['id']."&tab_id=" . $_POST['tab_id']."&err=$err");
+				pjUtil::redirect(PJ_INSTALL_URL . "index.php?controller=pjAdminPosts&action=pjActionUpdate&id=".$_POST['id'].$locale_param."&tab_id=" . $_POST['tab_id']."&err=$err");
 			} else {
 				$vote_table = pjVoteModel::factory()->getTable();
 				$arr = pjPostModel::factory()
@@ -358,6 +428,30 @@ class pjAdminPosts extends pjAdmin
 				}
 				if($can_update == true)
 				{
+					// Show the text of the language being edited. The default language falls back to
+					// the original columns; another language shows only its own translation (empty
+					// fields = not translated yet, the website then shows the default-language text).
+					$content_locale = $this->getContentLocale();
+					$i18n = $this->getTranslations('pjPost', $arr['id']);
+					$translation_missing = false;
+					if ($this->isMultiLang() && $content_locale !== (int) $this->getDefaultLocaleId())
+					{
+						foreach (pjAppController::$translatable['pjPost'] as $field)
+						{
+							$arr[$field] = isset($i18n[$content_locale][$field]) ? $i18n[$content_locale][$field] : '';
+						}
+						$translation_missing = empty($i18n[$content_locale]['title']) && empty($i18n[$content_locale]['body']);
+					} elseif (isset($i18n[$content_locale])) {
+						foreach (pjAppController::$translatable['pjPost'] as $field)
+						{
+							if ($field !== 'url_slug' && isset($i18n[$content_locale][$field]))
+							{
+								$arr[$field] = $i18n[$content_locale][$field];
+							}
+						}
+					}
+					$this->setLocaleForm($content_locale);
+					$this->set('translation_missing', $translation_missing);
 					$this->set('arr', $arr);
 
 					// Only offer active categories here too, but keep this
@@ -366,7 +460,7 @@ class pjAdminPosts extends pjAdmin
 					// on no selection at all ("-- Choose--") when you open
 					// this post to edit, and re-saving would silently clear
 					// its category.
-					$this->set('category_arr', pjCategoryModel::factory()->where('t1.status', 'T')->orWhere('t1.id', $arr['category_id'])->orderBy('t1.category ASC')->findAll()->getData());
+					$this->set('category_arr', $this->translateRows(pjCategoryModel::factory()->where('t1.status', 'T')->orWhere('t1.id', $arr['category_id'])->orderBy('t1.category ASC')->findAll()->getData(), 'pjCategory', $content_locale));
 					$this->set('author_arr', pjUserModel::factory()->orderBy('t1.name ASC')->findAll()->getData());
 					
 					$this->appendJs('tinymce.min.js', PJ_THIRD_PARTY_PATH . 'tinymce/');
@@ -589,17 +683,29 @@ class pjAdminPosts extends pjAdmin
 		{
 			if($_POST['value'] != ''){
 				$data = array($_POST['column'] => $_POST['value']);
-				// Inline title edit: the URL slug stays; a post without one gets
-				// one from the new title.
-				if ($_POST['column'] == 'title')
+				$locale_id = $this->isMultiLang() ? (int) $this->getLocaleId() : 0;
+				$is_translatable = in_array($_POST['column'], pjAppController::$translatable['pjPost']);
+				if ($locale_id > 0 && $is_translatable && $locale_id !== (int) $this->getDefaultLocaleId())
 				{
-					$slug = $this->pjSlugForRename('pjPostModel', (int) $_GET['id'], $_POST['value']);
-					if ($slug !== null)
+					// another language: only its own translation changes
+					$this->saveTranslation('pjPost', (int) $_GET['id'], $locale_id, array($_POST['column'] => $_POST['value']));
+				} else {
+					// Inline title edit: the URL slug stays; a post without one gets
+					// one from the new title.
+					if ($_POST['column'] == 'title')
 					{
-						$data['url_slug'] = $slug;
+						$slug = $this->pjSlugForRename('pjPostModel', (int) $_GET['id'], $_POST['value']);
+						if ($slug !== null)
+						{
+							$data['url_slug'] = $slug;
+						}
+					}
+					pjPostModel::factory()->where('id', $_GET['id'])->limit(1)->modifyAll($data);
+					if ($locale_id > 0 && $is_translatable)
+					{
+						$this->saveTranslation('pjPost', (int) $_GET['id'], $locale_id, array($_POST['column'] => $_POST['value']));
 					}
 				}
-				pjPostModel::factory()->where('id', $_GET['id'])->limit(1)->modifyAll($data);
 			}
 		}
 		exit;
@@ -643,6 +749,7 @@ class pjAdminPosts extends pjAdmin
 				}
 				pjCommentModel::factory()->where('post_id', $_GET['id'])->eraseAll();
 				pjVoteModel::factory()->where('post_id', $_GET['id'])->eraseAll();
+				$this->eraseTranslations('pjPost', $_GET['id']);
 				$response['code'] = 200;
 			} else {
 				$response['code'] = 100;
@@ -675,6 +782,7 @@ class pjAdminPosts extends pjAdmin
 				$pjPostModel->reset()->whereIn('id', $_POST['record'])->eraseAll();
 				pjCommentModel::factory()->whereIn('post_id', $_POST['record'])->eraseAll();
 				pjVoteModel::factory()->whereIn('post_id', $_POST['record'])->eraseAll();
+				$this->eraseTranslations('pjPost', $_POST['record']);
 			}
 		}
 		exit;
@@ -713,6 +821,18 @@ class pjAdminPosts extends pjAdmin
 						$item['url_slug'] = $this->pjUniqueSlug('pjPostModel', $item['title'], 0);
 
 						$newId = pjPostModel::factory($item)->insert()->getInsertId();
+						if ($newId !== false && (int) $newId > 0)
+						{
+							// the copy keeps the text of every language (title marked as a copy)
+							foreach ($this->getTranslations('pjPost', $id) as $clone_locale => $clone_values)
+							{
+								if (!empty($clone_values['title']))
+								{
+									$clone_values['title'] .= ' (copy)';
+								}
+								$this->saveTranslation('pjPost', $newId, $clone_locale, $clone_values);
+							}
+						}
 
 						if ($newId !== false && (int) $newId > 0 && !empty($arr['source_path']))
 						{
