@@ -1,0 +1,4 @@
+/* Admin > Install: embed install code box */
+.pj-embed-label { margin: 0 0 10px; font-weight: bold; }
+.pj-embed-code { height: 60px; overflow: auto; font-family: monospace; }
+.pj-embed-actions { margin: 10px 0 20px; }

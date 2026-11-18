@@ -1,0 +1,585 @@
+/* ==========================================================================
+	#Transitions
+========================================================================== */
+#pjWrapper .btn,
+#pjWrapper .pjBlSocials a,
+#pjWrapper .form-control,
+#pjWrapper .pjBlNav .pjBlSearch label,
+#pjWrapper .pjBlFiltersDropdown,
+#pjWrapper .pjBlFilter a,
+#pjWrapper .pjBlPost .pjBlPostImageOverlay,
+#pjWrapper .pjBlCommentsCounter,
+#pjWrapper .pjBlPost .pjBlPostTitle a,
+#pjWrapper .pjBlPost .pjBlPostMeta li,
+#pjWrapper .pjBlPost .pjBlPostMeta li a,
+#pjWrapper .pjBlPaging .pagination a,
+#pjWrapper .pjBlArticle .pjBlArticleBody a,
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta li a { -webkit-transition: none; -moz-transition: none; -ms-transition: none; -o-transition: none; transition: none; }
+
+/* ==========================================================================
+	#General
+========================================================================== */
+#pjWrapper a[href^=tel] { color: inherit; }
+#pjWrapper a:focus,
+#pjWrapper button:focus { outline: unset; outline: none; }
+
+#pjWrapper .pjBlContainer { padding: 15px; }
+
+/* ==========================================================================
+	#Buttons
+========================================================================== */
+#pjWrapper .btn { border-radius: 0; }
+
+#pjWrapper .btn-default { height: 36px; padding: 0 15px; font-size: 16px; line-height: 32px; font-weight: 400; text-transform: uppercase; }
+
+#pjWrapper .btn-primary { height: 36px; padding: 0 15px; border: 0 solid #ff7474; font-size: 16px; line-height: 36px; font-weight: 400; text-transform: uppercase; }
+
+/* ==========================================================================
+	#Socials
+========================================================================== */
+#pjWrapper .pjBlSocials { padding: 10px 0; font-size: 0; }
+#pjWrapper .pjBlSocials ul { margin: 0; }
+#pjWrapper .pjBlSocials li,
+#pjWrapper .pjBlSocials a { display: inline-block; vertical-align: middle; }
+#pjWrapper .pjBlSocials li { padding: 5px 10px 5px 0; }
+#pjWrapper .pjBlSocials [class^="pjBlLink"] { overflow: hidden; width: 36px; height: 36px; background: url(../img/frontend/sprite.png); font-size: 0; white-space: nowrap; text-indent: 200%; }
+#pjWrapper .pjBlSocials .pjBlLinkFacebook { background-position: 8px 2px; }
+#pjWrapper .pjBlSocials .pjBlLinkTwitter { background-position: -56px 2px; }
+#pjWrapper .pjBlSocials .pjBlLinkPinterest { background-position: -196px 1px; }
+#pjWrapper .pjBlSocials .pjBlLinkLinkedIn { background-position: -267px 1px; }
+#pjWrapper .pjBlSocials .pjBlLinkGooglePlus { background-position: -127px 2px; }
+#pjWrapper .pjBlSocials .pjBlLinkInstagram { background-position: -347px 1px; }
+
+/* ==========================================================================
+	#Forms
+========================================================================== */
+#pjWrapper .pjBlForm .form-group { position: relative; margin: 0; padding-bottom: 25px; }
+#pjWrapper .pjBlForm .form-control { height: 36px; padding: 0 15px; border: 1px solid #e4e2e3; border-radius: 0; }
+#pjWrapper .pjBlForm textarea.form-control { height: 190px; padding: 15px; }
+#pjWrapper .pjBlForm label { margin: 0 0 5px; font-size: 15px; line-height: 1.4; font-weight: 400; }
+
+#pjWrapper .pjBlForm .pjBlFormCaptcha { font-size: 0; }
+#pjWrapper .pjBlForm .pjBlFormCaptcha .form-control,
+#pjWrapper .pjBlForm .pjBlFormCaptcha img { display: inline-block; vertical-align: middle; }
+#pjWrapper .pjBlForm .pjBlFormCaptcha .form-control { width: 190px; margin-right: 10px; }
+
+#pjWrapper .pjBlForm .help-block,
+#pjWrapper .pjBlForm .help-block ul,
+#pjWrapper .pjBlForm .help-block li { margin: 0; }
+#pjWrapper .pjBlForm .help-block { position: absolute; bottom: 8px; left: 0; overflow: hidden; width: 100%; }
+#pjWrapper .pjBlForm .help-block li { overflow: hidden; max-width: 100%; font-size: 13px; white-space: nowrap; -ms-text-overflow: ellipsis; text-overflow: ellipsis; }
+
+/* ==========================================================================
+	#pjBlModal
+========================================================================== */
+#pjWrapper .pjBlModal .modal-content,
+#pjWrapper .pjBlModal .modal-header,
+#pjWrapper .pjBlModal .modal-body,
+#pjWrapper .pjBlModal .modal-footer { border-radius: 0; }
+#pjWrapper .pjBlModal .modal-title { font-size: 24px; line-height: 1.4; font-weight: 700; text-transform: uppercase; }
+
+/* ==========================================================================
+	#Main
+========================================================================== */
+#pjWrapper .pjBlMain { position: relative; /* overflow: hidden;  */}
+#pjWrapper .pjBlMain,
+#pjWrapper .pjBlHeader,
+#pjWrapper .pjBlBody,
+#pjWrapper .pjBlFooter { border-width: 0; border-radius: 0; -webkit-box-shadow: none; box-shadow: none; }
+
+/* ==========================================================================
+	#pjBlHeader
+========================================================================== */
+#pjWrapper .pjBlHeader { padding: 0; }
+#pjWrapper .pjBlHeader .pjBlHeaderInner { position: relative; z-index: 4; padding: 10px; }
+#pjWrapper .pjBlNav { padding: 0 5px; }
+#pjWrapper .pjBlNav .btn-default:hover,
+#pjWrapper .pjBlNav .btn-default:focus,
+#pjWrapper .pjBlNav .btn-default.active,
+#pjWrapper .pjBlNav .btn-default.pjBlFiltersTriggerActive { -webkit-box-shadow: none; box-shadow: none; }
+#pjWrapper .pjBlNav .btn-default:hover,
+#pjWrapper .pjBlNav .btn-default:focus { z-index: 2; }
+#pjWrapper .pjBlNav .btn-default.active,
+#pjWrapper .pjBlNav .btn-default.pjBlFiltersTriggerActive { z-index: 3; }
+#pjWrapper .pjBlNav .pjBlSearch { padding: 0; font-size: 0; }
+#pjWrapper .pjBlNav .pjBlSearch.pjBlSearchActive { z-index: 3; }
+#pjWrapper .pjBlNav .pjBlSearch label,
+#pjWrapper .pjBlNav .pjBlSearch .form-control { display: inline-block; margin: 0; vertical-align: middle; }
+#pjWrapper .pjBlNav .pjBlSearch .form-control { width: 0; padding: 0; border: 0; background: none; border-radius: 0; -webkit-box-shadow: none; box-shadow: none; }
+#pjWrapper .pjBlNav .pjBlSearch.pjBlSearchActive .form-control,
+#pjWrapper .pjBlNav .pjBlSearch .form-control:focus { width: 160px; padding: 0 10px 0 0; }
+#pjWrapper .pjBlNav .pjBlSearch label { padding: 0 15px; font-size: 16px; cursor: pointer; }
+
+/* ==========================================================================
+	#pjBlFiltersDropdown
+========================================================================== */
+#pjWrapper .pjBlFiltersDropdown { position: absolute; top: 0; left: 0; z-index: 3; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; visibility: hidden; width: 290px; max-width: 100%; height: auto; min-height: min(calc(100% - 56px), calc(100vh - 76px)); max-height: 0; padding: 40px 0 0; opacity: 0; }
+/* max-height is capped to the viewport (not 9999px) and the panel scrolls
+   internally (overflow-y: auto above) - .pjBlMain clips overflow for its
+   rounded-card look, so anything taller than the visible viewport used to
+   just get cut off with no way to reach the rest of the category/archive
+   list. */
+#pjWrapper .pjBlFiltersDropdown.pjBlFiltersDropdownActive { top: 56px; visibility: visible; opacity: 1; max-height: calc(100vh - 76px); }
+#pjWrapper .pjBlFiltersDropdown .pjBlFiltersRemove { position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; padding: 0; border: 2px solid #767d83; line-height: 22px; text-align: center; }
+#pjWrapper .pjBlFilter { display: none; }
+#pjWrapper .pjBlFilter.pjBlFilterActive { display: block; }
+#pjWrapper .pjBlFilter .pjBlFilterTitle { margin: 0; padding: 5px 10px; font-size: 22px; line-height: 1.4; font-weight: 700; text-transform: uppercase; }
+#pjWrapper .pjBlFilter ul { margin: 0; padding: 0 0 10px; }
+#pjWrapper .pjBlFilter li { border-bottom: 1px solid #33b6ae; }
+#pjWrapper .pjBlFilter a { display: block; padding: 5px 15px; border-left: 0px solid #33b6ae; font-size: 16px; line-height: 1.6; }
+#pjWrapper .pjBlFilter a:hover,
+#pjWrapper .pjBlFilter a:focus,
+#pjWrapper .pjBlFilter .active a { text-decoration: none; }
+#pjWrapper .pjBlFilter a:hover,
+#pjWrapper .pjBlFilter a:focus { border-left-width: 8px; }
+#pjWrapper .pjBlFilter .active a { border-left-width: 10px; }
+
+/* ==========================================================================
+	#pjBlBody
+========================================================================== */
+#pjWrapper .pjBlBody { position: relative; z-index: 1; }
+#pjWrapper .pjBlPageTitle { margin: 10px; padding: 0; font-size: 28px; line-height: 1.3; font-weight: 700; }
+
+/* ==========================================================================
+	#pjBlPost
+========================================================================== */
+#pjWrapper .pjBlPost { padding: 20px 15px; }
+#pjWrapper .pjBlPost:last-of-type { border-bottom-width: 0; }
+#pjWrapper .pjBlPost .pjBlPostImage img { width: 100%; height: auto; }
+#pjWrapper .pjBlPost .pjBlPostImage a { position: relative; display: block; text-align: center; }
+#pjWrapper .pjBlPost .img-holder { display: block; position: relative; }
+#pjWrapper .pjBlPost .pjBlPostImageOverlay { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 0; text-align: center; opacity: 0; }
+#pjWrapper .pjBlPost:hover .pjBlPostImageOverlay { opacity: 1; }
+#pjWrapper .pjBlPost .pjBlPostImageOverlay:before { display: inline-block; height: 100%; margin-left: -0.25em; vertical-align: middle; content: ''; }
+#pjWrapper .pjBlPost .pjBlPostImageOverlay .btn { max-width: 100%; text-align: center; -webkit-transform: scale(0); -ms-transform: scale(0); -o-transform: scale(0); transform: scale(0); }
+#pjWrapper .pjBlPost:hover .pjBlPostImageOverlay .btn { -webkit-transform: scale(1); -ms-transform: scale(1); -o-transform: scale(1); transform: scale(1); }
+
+#pjWrapper .pjBlPost .pjBlPostContent p,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph { font-size: 16px; line-height: 1.5em; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph { position: relative; overflow: hidden; display: block; max-height: 3em; margin-right: -.5em; padding-right: 1em; text-align: justify; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph:before,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph:after { position: absolute; right: 0; width: 1em; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph:before { bottom: 0; content: '...'; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph:after { height: 1em; margin-top: .2em; content: ''; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle { margin: 0; padding-top: 3px; font-size: 24px; line-height: 1.4; font-weight: 700; text-transform: uppercase; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle a { display: block; overflow: hidden; color: inherit; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle a:hover,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle a:focus { text-decoration: none; }
+#pjWrapper .pjBlCommentsCounter,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle .pjBlCommentsCounter { font-size: 16px; }
+#pjWrapper .pjBlCommentsCounter:hover,
+#pjWrapper .pjBlCommentsCounter:focus { text-decoration: none; }
+#pjWrapper .pjBlCommentsCounter .glyphicon { font-size: 14px; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta { margin: 0; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta li { padding: 0 7px 0 0; margin-right: 5px; border-right: 1px solid #909898; font-size: 14px; line-height: 1.1; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta li:last-of-type { border-right: 0; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory { text-transform: uppercase; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory a { color: inherit; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory a:hover,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory a:focus { text-decoration: none; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostAuthor a { text-transform: capitalize; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostAuthor a:hover,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostAuthor a:focus { text-decoration: none; }
+
+#pjWrapper .pjBlRate { overflow: hidden; font-size: 0; line-height: 0; font-weight: bold; }
+#pjWrapper .pjBlPost .pjBlRate { padding: 5px 0 10px; }
+
+#pjWrapper .pjBlStarsResult,
+#pjWrapper .pjBlStars { display: inline-block; vertical-align: top; }
+#pjWrapper .pjBlRate .pjBlStarsResultCurrent { display: none; }
+#pjWrapper .pjBlRate:hover .pjBlStarsResult { display: none; }
+#pjWrapper .pjBlRate:hover .pjBlStarsResultCurrent { display: inline-block; }
+#pjWrapper .pjBlPost .pjBlRate:hover .pjBlStarsResult { display: inline-block; }
+
+#pjWrapper .pjBlStarsResult,
+#pjWrapper .pjBlStarsResultCurrent { padding-left: 5px; font-size: 16px; line-height: 1.5; font-weight: 400; }
+
+#pjWrapper .pjBlStars { position: relative; margin-right: 30px; }
+#pjWrapper .pjBlStars label { margin: 0; padding: 0 3px 0 0; font-size: 18px; line-height: 1.4; cursor: pointer; }
+#pjWrapper .pjBlStars input { position: absolute; top: 0; left: -999px; }
+
+#pjWrapper .pjBlStars:hover > input:disabled + label { cursor: default; pointer-events: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; user-select: none; }
+
+#pjWrapper .pjBlStars input:nth-of-type(1):checked ~ .pjBlStarsResultCurrent:after { content: '0'; }
+#pjWrapper .pjBlStars input:nth-of-type(2):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(1):hover ~ .pjBlStarsResultCurrent:after { content: '1'; }
+#pjWrapper .pjBlStars input:nth-of-type(3):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(2):hover ~ .pjBlStarsResultCurrent:after { content: '2'; }
+#pjWrapper .pjBlStars input:nth-of-type(4):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(3):hover ~ .pjBlStarsResultCurrent:after { content: '3'; }
+#pjWrapper .pjBlStars input:nth-of-type(5):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(4):hover ~ .pjBlStarsResultCurrent:after { content: '4'; }
+#pjWrapper .pjBlStars input:nth-of-type(6):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(5):hover ~ .pjBlStarsResultCurrent:after { content: '5'; }
+#pjWrapper .pjBlStars input:nth-of-type(7):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(6):hover ~ .pjBlStarsResultCurrent:after { content: '6'; }
+#pjWrapper .pjBlStars input:nth-of-type(8):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(7):hover ~ .pjBlStarsResultCurrent:after { content: '7'; }
+#pjWrapper .pjBlStars input:nth-of-type(9):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(8):hover ~ .pjBlStarsResultCurrent:after { content: '8'; }
+#pjWrapper .pjBlStars input:nth-of-type(10):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(9):hover ~ .pjBlStarsResultCurrent:after { content: '9'; }
+#pjWrapper .pjBlStars input:nth-of-type(11):checked ~ .pjBlStarsResultCurrent:after,
+#pjWrapper .pjBlStars label:nth-of-type(10):hover ~ .pjBlStarsResultCurrent:after { content: '10'; }
+
+/* ==========================================================================
+	#pjBlPaging
+========================================================================== */
+#pjWrapper .pjBlPaging { padding: 10px 0; font-size: 0; }
+#pjWrapper .pjBlPaging .pagination { margin: 0; padding: 0; }
+#pjWrapper .pjBlPaging .pagination li { display: inline-block; }
+#pjWrapper .pjBlPaging .pagination a { font-size: 16px; border-radius: 0; }
+#pjWrapper .pjBlPaging .pagination .active a { cursor: default; pointer-events: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -o-user-select: none; user-select: none; }
+
+/* ==========================================================================
+	#pjBlFooter
+========================================================================== */
+#pjWrapper .pjBlFooter { position: relative; z-index: 2; }
+
+/* ==========================================================================
+	#pjBlArticle
+========================================================================== */
+#pjWrapper .pjBlArticle .pjBlBackLink{font-size: 18px;}
+#pjWrapper .pjBlArticle .pjBlArticleHead { padding-bottom: 15px; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleTitle { margin: 0; font-size: 32px; line-height: 1.4; font-weight: 700; text-transform: uppercase; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleTitle .pjBlCommentsCounter { margin-left: 5px; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta { margin: 10px 0; padding-bottom: 10px 0; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta li { padding: 0 7px 0 0; margin-right: 5px; border-right: 1px solid #909898; font-size: 14px; line-height: 1.1; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta li:last-of-type { border-right: 0; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory { text-transform: uppercase; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory a { color: inherit; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory a:hover,
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory a:focus { text-decoration: none; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleAuthor a { text-transform: capitalize; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleAuthor a:hover,
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleAuthor a:focus { text-decoration: none; }
+
+#pjWrapper .pjBlArticle .pjBlArticleBody img,
+#pjWrapper .pjBlArticle .pjBlArticleBody iframe { max-width: 100%; }
+#pjWrapper .pjBlArticle .pjBlPostUnavailable { padding: 40px 15px; text-align: center; }
+#pjWrapper .pjBlArticle .pjBlPostUnavailable p { margin: 0; font-size: 16px; line-height: 1.5; color: #767d83; }
+#pjWrapper .pjBlArticle .pjBlArticleBody p { margin: 0; padding: 5px 0; font-size: 15px; line-height: 1.4; }
+#pjWrapper .pjBlArticle .pjBlArticleBody ul,
+#pjWrapper .pjBlArticle .pjBlArticleBody ol { margin: 0; padding-top: 10px; padding-bottom: 10px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody li { font-size: 16px; line-height: 1.4; }
+#pjWrapper .pjBlArticle .pjBlArticleBody strong { font-weight: 700; }
+#pjWrapper .pjBlArticle .pjBlArticleBody a:hover { text-decoration: none; }
+#pjWrapper .pjBlArticle .pjBlArticleBody a strong { color: inherit; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h1,
+#pjWrapper .pjBlArticle .pjBlArticleBody h2,
+#pjWrapper .pjBlArticle .pjBlArticleBody h3,
+#pjWrapper .pjBlArticle .pjBlArticleBody h4,
+#pjWrapper .pjBlArticle .pjBlArticleBody h5,
+#pjWrapper .pjBlArticle .pjBlArticleBody h6 { margin: 0; padding: 5px 0 10px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h1 { font-size: 34px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h2 { font-size: 28px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h3 { font-size: 24px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h4 { font-size: 18px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h5 { font-size: 16px; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h6 { font-size: 14px; }
+
+#pjWrapper .pjBlArticle .pjBlArticleFoot { padding-top: 30px; }
+#pjWrapper .pjBlArticle .pjBlArticleSocials { padding: 20px 0; border-bottom: 1px solid #e3e3e3; }
+#pjWrapper .pjBlArticle .pjBlArticleComments { padding: 5px 0 15px; }
+#pjWrapper .pjBlArticle .pjBlArticleComments .pjBlArticleCommentsTitle { font-size: 18px; line-height: 1.4; font-weight: 700; text-transform: uppercase; }
+
+#pjWrapper .pjBlComments { margin: 0; padding: 15px 0; }
+#pjWrapper .pjBlComment { padding: 10px 0; }
+#pjWrapper .pjBlComment .pjBlCommentHead { position: relative; padding-bottom: 5px; border-bottom: 1px solid #e3e3e3; }
+#pjWrapper .pjBlComment .pjBlCommentHead .pjBlCommentAuthor { margin: 0; font-size: 16px; line-height: 1.4; font-weight: 700; text-transform: capitalize; }
+#pjWrapper .pjBlComment .pjBlCommentHead .pjBlCommentMeta { margin: 0; font-size: 13px; }
+#pjWrapper .pjBlComment .pjBlCommentBody { padding: 10px 5px 0; }
+#pjWrapper .pjBlComment .pjBlCommentBody p { margin: 0; font-size: 15px; line-height: 1.4; }
+
+/* ==========================================================================
+	.Modal
+========================================================================== */
+.modal-backdrop.fade {
+	opacity: 0;
+	filter: alpha(opacity=0);
+}
+.modal-backdrop.fade.in {
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+/* ==========================================================================
+	#Responsive
+========================================================================== */
+@media only screen and (max-width: 767px) {
+	/* ==========================================================================
+		#pjBlPost
+	========================================================================== */
+	#pjWrapper .pjBlPost .pjBlPostContent p,
+	#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph { font-size: 14px; }
+	#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle { font-size: 18px; }
+	#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta li { font-size: 13px; }
+	#pjWrapper .pjBlPost .pjBlRate { padding: 0 0 5px; }
+}
+
+@media only screen and (max-width: 640px) {
+	/* ==========================================================================
+		#Forms
+	========================================================================== */
+	#pjWrapper .pjBlForm .pjBlFormCaptcha .form-control { width: 170px; }
+
+	/* ==========================================================================
+		#Header
+	========================================================================== */
+	#pjWrapper .pjBlNav { width: 100%; }
+	#pjWrapper .pjBlNav .btn-default { padding: 0 10px; }
+	#pjWrapper .pjBlNav .pjBlSearch { display: block; width: 100%; margin: 5px 0 0; padding: 0; text-align: left; }
+	#pjWrapper .pjBlNav .pjBlSearch .form-control,
+	#pjWrapper .pjBlNav .pjBlSearch .form-control:focus { width: calc(100% - 60px); padding: 0; }
+	#pjWrapper .pjBlFiltersDropdown { min-height: min(calc(100% - 96px), calc(100vh - 115px)); }
+	#pjWrapper .pjBlFiltersDropdown.pjBlFiltersDropdownActive { top: 95px; max-height: calc(100vh - 115px); }
+
+	/* ==========================================================================
+		#pjBlPost
+	========================================================================== */
+	#pjWrapper .pjBlPost { padding-bottom: 5px; }
+	#pjWrapper .pjBlPost .pjBlPostImage,
+	#pjWrapper .pjBlPost .pjBlPostContent { width: 100%; }
+	#pjWrapper .pjBlPost .pjBlPostImage { padding: 0 0 10px; }
+	#pjWrapper .pjBlPost .pjBlPostContent { padding: 0 5px; }
+	#pjWrapper .pjBlStarsResult,
+	#pjWrapper .pjBlStarsResultCurrent { font-size: 15px; }
+
+	/* ==========================================================================
+		#pjBlArticle
+	========================================================================== */
+	#pjWrapper .panel-body.pjBlBody { padding: 0; }
+	#pjWrapper .pjBlArticle { padding: 10px 5px; }
+	#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleTitle { font-size: 24px; line-height: 1.2; }
+	#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta li { font-size: 13px; }
+}
+/* ==========================================================================
+	#Modern UI enhancement layer (responsive)
+	Added on top of the base styles. This layer only touches layout, shape,
+	spacing and motion - all accent COLORS are still owned by the per-theme
+	files (themes/themeN.css), so every theme keeps working unchanged.
+========================================================================== */
+
+/* Re-enable smooth motion (the base disables transitions) */
+#pjWrapper .btn,
+#pjWrapper .form-control,
+#pjWrapper .pjBlPost,
+#pjWrapper .pjBlPost .pjBlPostImage img,
+#pjWrapper .pjBlPost .pjBlPostImageOverlay,
+#pjWrapper .pjBlPost .pjBlPostImageOverlay .btn,
+#pjWrapper .pjBlCommentsCounter,
+#pjWrapper .pjBlPost .pjBlPostTitle a,
+#pjWrapper .pjBlPaging .pagination a,
+#pjWrapper .pjBlSocials a,
+#pjWrapper .pjBlFilter a,
+#pjWrapper .pjBlNav .btn-default,
+#pjWrapper .pjBlArticle .pjBlArticleBody a { -webkit-transition: all .25s ease; -moz-transition: all .25s ease; -o-transition: all .25s ease; transition: all .25s ease; }
+
+/* Page canvas + centered layout */
+body { background: #eef1f5; }
+#pjWrapper { background: #eef1f5; }
+#pjWrapper .pjBlContainer { max-width: 1140px; margin: 0 auto; padding: 26px 16px 44px; }
+
+/* Main surface = one elevated, rounded card */
+#pjWrapper .pjBlMain { border-radius: 16px; overflow: hidden; background: #fff; -webkit-box-shadow: 0 12px 34px rgba(17, 24, 39, .09), 0 2px 6px rgba(17, 24, 39, .05); box-shadow: 0 12px 34px rgba(17, 24, 39, .09), 0 2px 6px rgba(17, 24, 39, .05); }
+/* A short page (e.g. the "Post not found" message on a deactivated post)
+   makes this card too short to contain the Categories/Archive dropdown's
+   own natural height - the overflow: hidden above (needed for the
+   rounded-corner look) then clips the dropdown's list with no way to
+   reach the rest of it, the same symptom as the original bug but on a
+   short page instead of a long one. Let the card's overflow become
+   visible for as long as a dropdown is open, so the list is never clipped
+   by the card itself; the dropdown's own max-height + overflow-y: auto
+   above still caps/scrolls it when the list is taller than the screen. */
+#pjWrapper .pjBlMain:has(.pjBlFiltersDropdownActive) { overflow: visible; }
+/* The dropdown itself never had its own background/rounding/shadow - it
+   only ever looked "contained" because the card's own overflow: hidden
+   kept it from ever sticking out past the card's white background. Now
+   that overflow can become visible (rule above), any part of the dropdown
+   that extends past the card's edge has nothing behind it and floats over
+   the page background instead of looking like part of the page ("going
+   out of box"). Giving the dropdown its own white background, a shadow,
+   and rounded bottom corners (matching the card's own 16px radius) makes
+   it look like a proper flyout panel in every case, whether or not it's
+   still within the card's own bounds. */
+#pjWrapper .pjBlFiltersDropdown.pjBlFiltersDropdownActive { background: #fff; border-radius: 0 0 16px 16px; -webkit-box-shadow: 6px 10px 24px rgba(17, 24, 39, .16); box-shadow: 6px 10px 24px rgba(17, 24, 39, .16); }
+
+/* Header / navigation */
+#pjWrapper .pjBlHeader .pjBlHeaderInner { padding: 14px 18px; }
+#pjWrapper .pjBlNav { display: -webkit-box; display: -ms-flexbox; display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; -webkit-box-align: center; -ms-flex-align: center; align-items: center; padding: 0; }
+#pjWrapper .pjBlNav .btn-default { height: 44px; line-height: 42px; padding: 0 18px; margin: 4px 8px 4px 0; border-radius: 12px; font-size: 14px; letter-spacing: .4px; }
+#pjWrapper .pjBlNav .pjBlSearch { margin: 4px 0 4px auto; padding: 0 6px; height: 44px; border-radius: 12px; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; }
+#pjWrapper .pjBlNav .pjBlSearch label { height: 44px; line-height: 44px; padding: 0 12px; }
+#pjWrapper .pjBlNav .pjBlSearch .form-control { height: 44px; }
+#pjWrapper .pjBlNav .pjBlSearch.pjBlSearchActive .form-control,
+#pjWrapper .pjBlNav .pjBlSearch .form-control:focus { width: 190px; padding: 0 10px 0 0; }
+
+/* Buttons + forms: soft rounded */
+#pjWrapper .btn { border-radius: 12px; letter-spacing: .3px; }
+#pjWrapper .btn-primary,
+#pjWrapper .btn-default { height: 44px; line-height: 42px; }
+#pjWrapper .pjBlForm .form-control { height: 48px; border-radius: 12px; padding: 0 16px; }
+#pjWrapper .pjBlForm textarea.form-control { height: 170px; padding: 14px 16px; }
+#pjWrapper .pjBlForm .pjBlFormCaptcha .form-control { border-radius: 12px; }
+#pjWrapper .pjBlFilter .pjBlFilterTitle { border-radius: 10px 10px 0 0; }
+
+/* Posts list: light tray holding white cards */
+#pjWrapper ul.pjBlBody { background: #f6f7f9; padding: 12px; margin-bottom: 0; }
+#pjWrapper .pjBlBody .pjBlPost,
+#pjWrapper .pjBlBody .pjBlPost:nth-child(even) { background: #fff; }
+#pjWrapper .pjBlPost { border: 1px solid #e9ecf1; border-radius: 16px; padding: 16px; margin: 12px 6px; }
+#pjWrapper .pjBlPost:last-of-type { border-bottom-width: 1px; margin-bottom: 6px; }
+#pjWrapper .pjBlPost:hover { -webkit-box-shadow: 0 14px 30px rgba(17, 24, 39, .12); box-shadow: 0 14px 30px rgba(17, 24, 39, .12); -webkit-transform: translateY(-3px); -ms-transform: translateY(-3px); transform: translateY(-3px); }
+
+/* Post image: uniform ratio, rounded, zoom on hover */
+#pjWrapper .pjBlPost .img-holder { border-radius: 12px; overflow: hidden; }
+#pjWrapper .pjBlPost .pjBlPostImage img { display: block; width: 100%; height: 100%; -o-object-fit: cover; object-fit: cover; aspect-ratio: 16 / 10; }
+#pjWrapper .pjBlPost:hover .pjBlPostImage img { -webkit-transform: scale(1.06); -ms-transform: scale(1.06); transform: scale(1.06); }
+
+/* Titles / meta / excerpt */
+#pjWrapper .pjBlPost .pjBlPostContent { padding-left: 6px; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle { font-size: 21px; line-height: 1.3; letter-spacing: .2px; text-transform: none; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta { margin: 8px 0 4px; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta li { line-height: 1.5; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph { max-height: 3.2em; line-height: 1.6; text-align: left; }
+#pjWrapper .pjBlPost .pjBlRate { padding: 4px 0 8px; }
+#pjWrapper .pjBlStars label { font-size: 16px; }
+
+/* Paginator: centered pills */
+#pjWrapper .pjBlPaging { padding: 18px 0 8px; text-align: center; }
+#pjWrapper .pjBlPaging .pagination a { display: inline-block; min-width: 42px; height: 42px; margin: 0 3px; padding: 8px 12px; border-radius: 12px; line-height: 24px; }
+
+/* Single article: comfortable reading + comment cards */
+#pjWrapper .panel-body.pjBlBody { padding: 26px 30px; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleTitle { font-size: 30px; line-height: 1.25; letter-spacing: .2px; text-transform: none; }
+#pjWrapper .pjBlArticle .pjBlArticleBody p { font-size: 17px; line-height: 1.75; padding: 8px 0; }
+#pjWrapper .pjBlArticle .pjBlArticleBody li { line-height: 1.7; }
+#pjWrapper .pjBlArticle .pjBlArticleBody img { border-radius: 12px; }
+#pjWrapper .pjBlArticle .pjBlArticleComments .pjBlArticleCommentsTitle { font-size: 20px; text-transform: none; }
+#pjWrapper .pjBlComment { padding: 14px 16px; margin: 12px 0; border: 1px solid #e9ecf1; border-radius: 12px; background: #fbfcfd; }
+#pjWrapper .pjBlComment .pjBlCommentHead { border-bottom: 0; padding-bottom: 2px; }
+#pjWrapper .pjBlComment .pjBlCommentBody { padding: 6px 0 0; }
+
+/* Social buttons + modal rounded */
+#pjWrapper .pjBlSocials [class^="pjBlLink"] { border-radius: 12px; }
+#pjWrapper .pjBlModal .modal-content { border-radius: 16px; overflow: hidden; }
+
+/* ==========================================================================
+	#Modern - responsive
+========================================================================== */
+@media only screen and (max-width: 991px) {
+	#pjWrapper .pjBlContainer { padding: 16px 12px 34px; }
+	#pjWrapper .panel-body.pjBlBody { padding: 20px 18px; }
+}
+@media only screen and (max-width: 767px) {
+	#pjWrapper .pjBlMain { border-radius: 14px; }
+	#pjWrapper ul.pjBlBody { padding: 8px; }
+	#pjWrapper .pjBlPost { padding: 14px; margin: 10px 4px; }
+	#pjWrapper .pjBlPost .row { display: block; }
+	#pjWrapper .pjBlPost .pjBlPostImage,
+	#pjWrapper .pjBlPost .pjBlPostContent { display: block; width: 100%; float: none; }
+	#pjWrapper .pjBlPost .pjBlPostImage { padding: 0 0 12px; }
+	#pjWrapper .pjBlPost .pjBlPostImage img { aspect-ratio: 16 / 9; }
+	#pjWrapper .pjBlPost .pjBlPostContent { padding: 0 2px; }
+	#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle { font-size: 19px; }
+	#pjWrapper .pjBlNav .pjBlSearch { margin-left: 0; width: 100%; }
+	#pjWrapper .pjBlNav .pjBlSearch .form-control,
+	#pjWrapper .pjBlNav .pjBlSearch.pjBlSearchActive .form-control,
+	#pjWrapper .pjBlNav .pjBlSearch .form-control:focus { width: calc(100% - 60px); }
+	#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleTitle { font-size: 24px; }
+	#pjWrapper .pjBlArticle .pjBlArticleBody p { font-size: 16px; line-height: 1.7; }
+}
+
+/* ==========================================================================
+	#Theme11 - Compact List (Tall)
+	Only rendered when theme11 is active (see pjActionIndex.php). Reuses the
+	site's "Modern" white-tray-card look, but lays each post out as a wide
+	row with a noticeably taller thumbnail instead of stacked card blocks.
+========================================================================== */
+#pjWrapper ul.pjBlBodyCompactTall { background: #f6f7f9; padding: 12px; margin-bottom: 0; }
+#pjWrapper .pjBlPostCompactTall { background: #fff; border: 1px solid #e9ecf1; border-radius: 16px; padding: 0; margin: 12px 6px; overflow: hidden; }
+#pjWrapper .pjBlPostCompactTall:hover { -webkit-box-shadow: 0 14px 30px rgba(17, 24, 39, .12); box-shadow: 0 14px 30px rgba(17, 24, 39, .12); -webkit-transform: translateY(-3px); -ms-transform: translateY(-3px); transform: translateY(-3px); }
+#pjWrapper .pjBlPostCompactTallRow { display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; gap: 22px; padding: 18px 22px; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostThumbLink { -webkit-box-flex: 0; -ms-flex: 0 0 auto; flex: 0 0 auto; display: block; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostThumb { display: block; width: 176px; height: 132px; border-radius: 12px; overflow: hidden; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostThumb img { display: block; width: 100%; height: 100%; -o-object-fit: cover; object-fit: cover; -webkit-transition: -webkit-transform .3s; transition: -webkit-transform .3s; -o-transition: transform .3s; transition: transform .3s; transition: transform .3s, -webkit-transform .3s; }
+#pjWrapper .pjBlPostCompactTall:hover .pjBlPostThumb img { -webkit-transform: scale(1.06); -ms-transform: scale(1.06); transform: scale(1.06); }
+#pjWrapper .pjBlPostCompactTall .pjBlPostMain { -webkit-box-flex: 1; -ms-flex: 1 1 auto; flex: 1 1 auto; min-width: 0; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column; gap: 7px; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostCategoryBadge { -webkit-box-ordinal-group: 0; -ms-flex-order: -1; order: -1; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostCategoryBadge .pjSbCategoryItem { display: inline-block; padding: 2px 11px; border: 1px solid currentColor; border-radius: 20px; font-size: 11px; font-weight: 700; line-height: 1.7; letter-spacing: .03em; text-transform: uppercase; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostCategoryBadge .pjSbCategoryItem:hover,
+#pjWrapper .pjBlPostCompactTall .pjBlPostCategoryBadge .pjSbCategoryItem:focus { text-decoration: none; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostTitle { margin: 0; padding: 0; font-size: 21px; line-height: 1.32; font-weight: 700; letter-spacing: .2px; text-transform: none; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostTitle a { display: block; overflow: hidden; color: inherit; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostTitle a:hover,
+#pjWrapper .pjBlPostCompactTall .pjBlPostTitle a:focus { text-decoration: none; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostParagraph { position: static; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin: 0; padding: 0; max-height: none; font-size: 14px; line-height: 1.6; text-align: left; color: #6b7370; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostParagraph:before,
+#pjWrapper .pjBlPostCompactTall .pjBlPostParagraph:after { content: none; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostMeta { margin: 3px 0 0; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostMeta li { padding: 0 7px 0 0; margin-right: 5px; border-right: 1px solid #909898; font-size: 13px; line-height: 1.5; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostMeta li:last-of-type { border-right: 0; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostMeta .pjBlPostAuthor span { text-transform: capitalize; }
+#pjWrapper .pjBlPostCompactTall .pjBlPostStats { -webkit-box-flex: 0; -ms-flex: 0 0 auto; flex: 0 0 auto; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column; -webkit-box-align: end; -ms-flex-align: end; align-items: flex-end; gap: 10px; padding-left: 6px; }
+#pjWrapper .pjBlPostCompactTall .pjBlCommentsCounter { font-size: 15px; }
+#pjWrapper .pjBlPostCompactTall .pjBlCommentsCounter:hover,
+#pjWrapper .pjBlPostCompactTall .pjBlCommentsCounter:focus { text-decoration: none; }
+#pjWrapper .pjBlPostCompactTall .pjBlCommentsCounter .glyphicon { font-size: 13px; }
+#pjWrapper .pjBlPostCompactTall .pjBlRate { padding: 0; }
+#pjWrapper .pjBlPostCompactTall .pjBlStars { margin-right: 0; }
+
+@media only screen and (max-width: 767px) {
+	#pjWrapper ul.pjBlBodyCompactTall { padding: 8px; }
+	#pjWrapper .pjBlPostCompactTallRow { padding: 14px 14px; gap: 14px; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column; -webkit-box-align: stretch; -ms-flex-align: stretch; align-items: stretch; }
+	#pjWrapper .pjBlPostCompactTall .pjBlPostThumb { width: 100%; height: 190px; }
+	#pjWrapper .pjBlPostCompactTall .pjBlPostTitle { font-size: 18px; }
+	#pjWrapper .pjBlPostCompactTall .pjBlPostParagraph { -webkit-line-clamp: 2; }
+	#pjWrapper .pjBlPostCompactTall .pjBlPostStats { -webkit-box-orient: horizontal; -webkit-box-direction: normal; -ms-flex-direction: row; flex-direction: row; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: justify; -ms-flex-pack: justify; justify-content: space-between; padding-left: 0; padding-top: 4px; gap: 10px; }
+	#pjWrapper .pjBlPostCompactTall .pjBlRate { max-width: 100%; }
+}
+@media only screen and (max-width: 479px) {
+	#pjWrapper .pjBlPostCompactTall .pjBlPostThumb { height: 160px; }
+}
+
+/* ==========================================================================
+	#Theme12 - Card Grid
+	Only rendered when theme12 is active (see pjActionIndex.php). Same
+	white-tray-card language as the rest of the site, arranged as a
+	responsive grid of uniform cards instead of a single stacked column.
+========================================================================== */
+#pjWrapper ul.pjBlBodyCardGrid { display: -ms-grid; display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 22px; background: #f6f7f9; padding: 18px; margin-bottom: 0; }
+#pjWrapper ul.pjBlBodyCardGrid.pjBlBodyCardGridSingle { grid-template-columns: minmax(0, 380px); -webkit-box-pack: center; -ms-flex-pack: center; justify-content: center; }
+#pjWrapper .pjBlPostCardGrid { background: #fff; border: 1px solid #e9ecf1; border-radius: 16px; padding: 0; margin: 0; overflow: hidden; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column; }
+#pjWrapper .pjBlPostCardGrid:hover { -webkit-box-shadow: 0 14px 30px rgba(17, 24, 39, .12); box-shadow: 0 14px 30px rgba(17, 24, 39, .12); -webkit-transform: translateY(-3px); -ms-transform: translateY(-3px); transform: translateY(-3px); }
+#pjWrapper .pjBlPostCardGrid .pjBlPostThumbLink { display: block; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostThumb { display: block; overflow: hidden; aspect-ratio: 4 / 3; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostThumb img { display: block; width: 100%; height: 100%; -o-object-fit: cover; object-fit: cover; -webkit-transition: -webkit-transform .3s; transition: -webkit-transform .3s; -o-transition: transform .3s; transition: transform .3s; transition: transform .3s, -webkit-transform .3s; }
+#pjWrapper .pjBlPostCardGrid:hover .pjBlPostThumb img { -webkit-transform: scale(1.06); -ms-transform: scale(1.06); transform: scale(1.06); }
+#pjWrapper .pjBlPostCardGrid .pjBlPostBody { -webkit-box-flex: 1; -ms-flex: 1 1 auto; flex: 1 1 auto; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -ms-flex-direction: column; flex-direction: column; gap: 8px; padding: 16px 18px 18px; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostCategoryBadge .pjSbCategoryItem { display: inline-block; padding: 2px 11px; border: 1px solid currentColor; border-radius: 20px; font-size: 11px; font-weight: 700; line-height: 1.7; letter-spacing: .03em; text-transform: uppercase; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostCategoryBadge .pjSbCategoryItem:hover,
+#pjWrapper .pjBlPostCardGrid .pjBlPostCategoryBadge .pjSbCategoryItem:focus { text-decoration: none; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostTitle { margin: 0; padding: 0; font-size: 17px; line-height: 1.35; font-weight: 700; letter-spacing: .2px; text-transform: none; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostTitle a { display: block; overflow: hidden; color: inherit; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostTitle a:hover,
+#pjWrapper .pjBlPostCardGrid .pjBlPostTitle a:focus { text-decoration: none; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostMeta { margin: -3px 0 0; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostMeta li { padding: 0 7px 0 0; margin-right: 5px; border-right: 1px solid #909898; font-size: 12px; line-height: 1.4; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostMeta li:last-of-type { border-right: 0; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostMeta .pjBlPostAuthor span { text-transform: capitalize; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostParagraph { position: static; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin: 0; padding: 0; max-height: none; font-size: 13px; line-height: 1.55; text-align: left; color: #6b7370; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostParagraph:before,
+#pjWrapper .pjBlPostCardGrid .pjBlPostParagraph:after { content: none; }
+#pjWrapper .pjBlPostCardGrid .pjBlPostStatsRow { margin-top: auto; padding-top: 10px; border-top: 1px solid #eee; display: -webkit-box; display: -ms-flexbox; display: flex; -webkit-box-align: center; -ms-flex-align: center; align-items: center; -webkit-box-pack: justify; -ms-flex-pack: justify; justify-content: space-between; gap: 10px; }
+#pjWrapper .pjBlPostCardGrid .pjBlCommentsCounter { font-size: 14px; }
+#pjWrapper .pjBlPostCardGrid .pjBlCommentsCounter:hover,
+#pjWrapper .pjBlPostCardGrid .pjBlCommentsCounter:focus { text-decoration: none; }
+#pjWrapper .pjBlPostCardGrid .pjBlCommentsCounter .glyphicon { font-size: 12px; }
+#pjWrapper .pjBlPostCardGrid .pjBlRate { padding: 0; }
+#pjWrapper .pjBlPostCardGrid .pjBlStars { margin-right: 0; }
+
+@media only screen and (max-width: 767px) {
+	#pjWrapper ul.pjBlBodyCardGrid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; padding: 10px; }
+}
+@media only screen and (max-width: 479px) {
+	#pjWrapper ul.pjBlBodyCardGrid { grid-template-columns: 1fr; }
+}

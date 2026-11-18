@@ -1,0 +1,165 @@
+/* ==========================================================================
+	#General
+========================================================================== */
+#pjWrapper { color: #565b5e; }
+
+#pjWrapper * { font-family: 'Lato', sans-serif; }
+#pjWrapper .fa { font-family: 'FontAwesome'; }
+#pjWrapper .glyphicon { font-family: 'Glyphicons Halflings'; }
+
+#pjWrapper .pjBlContainer { background: #f3f1f2; }
+
+/* ==========================================================================
+	#Buttons
+========================================================================== */
+#pjWrapper .btn-default { border-color: #292728; background: #292728; color: #fff; }
+#pjWrapper .btn-default:hover,
+#pjWrapper .btn-default:focus { border-color: #191816; background: #191816; }
+
+#pjWrapper .btn-primary { border-color: #f34c2a; background: #f34c2a; color: #fff; text-shadow: 1px 2px rgba(0, 0, 0, .3); }
+#pjWrapper .btn-primary:hover,
+#pjWrapper .btn-primary:focus { border-color: #d0391c; background: #d0391c; }
+
+/* ==========================================================================
+	#Socials
+========================================================================== */
+#pjWrapper .pjBlSocials .pjBlLinkFacebook { background-color: #3b5998; }
+#pjWrapper .pjBlSocials .pjBlLinkTwitter { background-color: #55acee; }
+#pjWrapper .pjBlSocials .pjBlLinkPinterest { background-color: #cb2027; }
+#pjWrapper .pjBlSocials .pjBlLinkLinkedIn { background-color: #007bb5; }
+#pjWrapper .pjBlSocials .pjBlLinkGooglePlus { background-color: #dd4b39; }
+#pjWrapper .pjBlSocials .pjBlLinkInstagram { background-color: #125688; }
+#pjWrapper .pjBlSocials [class^="pjBlLink"]:hover { background-color: #d0391c; }
+
+/* ==========================================================================
+	#Forms
+========================================================================== */
+#pjWrapper .pjBlForm .form-control { border-color: #bebabb; background: #f3f1f2; -webkit-box-shadow: none; box-shadow: none; }
+#pjWrapper .pjBlForm .form-control:focus { border-color: #d0391c; -webkit-box-shadow: 0 0 10px rgba(208, 57, 28, .3); box-shadow: 0 0 10px rgba(208, 57, 28, .3); }
+#pjWrapper .pjBlForm label { color: #37383a; }
+
+#pjWrapper .pjBlForm .has-error .form-control { border-color: #a94442; }
+#pjWrapper .pjBlForm .has-error label,
+#pjWrapper .pjBlForm .has-error li { color: #a94442; }
+#pjWrapper .pjBlForm .has-success .form-control { border-color: #3c763d; }
+#pjWrapper .pjBlForm .has-success label,
+#pjWrapper .pjBlForm .has-success li { color: #3c763d; }
+
+/* ==========================================================================
+	#pjBlModal
+========================================================================== */
+#pjWrapper .pjBlModal .modal-title { color: #37383a; }
+
+/* ==========================================================================
+	#Main
+========================================================================== */
+#pjWrapper .pjBlMain,
+#pjWrapper .pjBlHeader,
+#pjWrapper .pjBlBody,
+#pjWrapper .pjBlFooter { border-color: #ded8da; }
+
+/* ==========================================================================
+	#pjBlHeader
+========================================================================== */
+#pjWrapper .pjBlHeader,
+#pjWrapper .pjBlHeader .pjBlHeaderInner { background: #3d3938; }
+#pjWrapper .pjBlNav .btn-default { border-color: #191816; background: #292728; color: #fff; }
+#pjWrapper .pjBlNav .btn-default:hover,
+#pjWrapper .pjBlNav .btn-default:focus { border-color: #191816; background: #191816; }
+#pjWrapper .pjBlNav .btn-default.active,
+#pjWrapper .pjBlNav .btn-default.pjBlFiltersTriggerActive,
+#pjWrapper .pjBlNav .pjBlSearch.pjBlSearchActive { border-color: #d0391c; background: #d0391c; }
+#pjWrapper .pjBlNav .pjBlSearch label,
+#pjWrapper .pjBlNav .pjBlSearch .form-control { color: #fff; }
+
+/* ==========================================================================
+	#pjBlFiltersDropdown
+========================================================================== */
+#pjWrapper .pjBlFiltersDropdown { background: #292728; -webkit-box-shadow: 2px 0 16px rgba(0, 0, 0, .35); box-shadow: 2px 0 16px rgba(0, 0, 0, .35); }
+#pjWrapper .pjBlFiltersDropdown .pjBlFiltersRemove { border-color: #191816; background: none; color: #191816; }
+#pjWrapper .pjBlFiltersDropdown .pjBlFiltersRemove:hover,
+#pjWrapper .pjBlFiltersDropdown .pjBlFiltersRemove:focus { border-color: #d0391c; background: #d0391c; color: #fff; }
+#pjWrapper .pjBlFilter .pjBlFilterTitle { padding: 11px 15px; background: #f34c2a; color: #fff; letter-spacing: .4px; -webkit-box-shadow: 0 2px 6px rgba(0, 0, 0, .25); box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
+#pjWrapper .pjBlFilter li { border-bottom-color: rgba(255, 255, 255, .07); }
+#pjWrapper .pjBlFilter li:last-child { border-bottom: 0; }
+#pjWrapper .pjBlFilter a { padding: 9px 16px; border-left-color: #f34c2a; color: #e8e8e8; -webkit-transition: background .18s ease, color .18s ease, border-left-width .18s ease; transition: background .18s ease, color .18s ease, border-left-width .18s ease; }
+#pjWrapper .pjBlFilter a:hover,
+#pjWrapper .pjBlFilter a:focus { background: rgba(243, 76, 42, .13); color: #fff; }
+#pjWrapper .pjBlFilter .active a { background: rgba(243, 76, 42, .20); color: #fff; font-weight: 600; }
+
+/* ==========================================================================
+	#pjBlPost
+========================================================================== */
+#pjWrapper .pjBlPost { border-color: #ded8da; }
+#pjWrapper .pjBlPost:nth-child(even) { background: #f3f1f2; }
+#pjWrapper .pjBlPost .pjBlPostImageOverlay { background: rgba(61, 57, 56, .5); }
+#pjWrapper .pjBlPost .pjBlPostContent p,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph { color: #565b5e; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostParagraph:after { background: #fff; }
+#pjWrapper .pjBlPost:nth-child(even) .pjBlPostContent .pjBlPostParagraph:after { background: #f3f1f2; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle { color: #37383a; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle a:hover,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle a:focus { color: #d0391c; }
+#pjWrapper .pjBlCommentsCounter,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostTitle .pjBlCommentsCounter { color: #f34c2a; }
+#pjWrapper .pjBlCommentsCounter:hover,
+#pjWrapper .pjBlCommentsCounter:focus { color: #d0391c; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta li { border-right-color: #565b5e; color: #565b5e; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory { color: #f34c2a; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory a:hover,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostCategory a:focus { color: #d0391c; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostAuthor span { color: #f34c2a; }
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostAuthor span:hover,
+#pjWrapper .pjBlPost .pjBlPostContent .pjBlPostMeta .pjBlPostAuthor span:focus { color: #d0391c; }
+
+#pjWrapper .pjBlRate { color: #333; }
+#pjWrapper .pjBlStarsResult,
+#pjWrapper .pjBlStarsResultCurrent { color: #565b5e; }
+#pjWrapper .pjBlStars label { color: #d0391c; }
+
+#pjWrapper .pjBlStars input:checked + label { color: #d0391c; }
+#pjWrapper .pjBlStars input:checked ~ label { color: #f34c2a; }
+#pjWrapper .pjBlStars:hover > input + label { color: #d0391c; }
+#pjWrapper .pjBlStars:hover > input + label:hover ~ label { color: #f34c2a; }
+
+/* ==========================================================================
+	#pjBlPaging
+========================================================================== */
+#pjWrapper .pjBlPaging .pagination a { border-color: #d0391c; background: #d0391c; color: #fff; }
+#pjWrapper .pjBlPaging .pagination a:hover,
+#pjWrapper .pjBlPaging .pagination a:focus { border-color: #f34c2a; background: #f34c2a; }
+#pjWrapper .pjBlPaging .pagination .active a { border-color: #f34c2a; background: #f34c2a; }
+
+/* ==========================================================================
+	#pjBlFooter
+========================================================================== */
+#pjWrapper .pjBlFooter { border-color: #3d3938; background: #3d3938; }
+
+/* ==========================================================================
+	#pjBlArticle
+========================================================================== */
+#pjWrapper .pjBlArticle .pjBlBackLink { color: #f34c2a; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleTitle { color: #37383a; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta li { border-right-color: #565b5e; color: #565b5e; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory { color: #f34c2a; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory a:hover,
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleCategory a:focus { color: #d0391c; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleAuthor span { color: #f34c2a; }
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleAuthor span:hover,
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta .pjBlArticleAuthor span:focus { color: #d0391c; }
+#pjWrapper .pjBlArticle .pjBlArticleBody p { color: #565b5e; }
+#pjWrapper .pjBlArticle .pjBlArticleBody strong { color: #37383a; }
+#pjWrapper .pjBlArticle .pjBlArticleBody a { color: #f34c2a; }
+#pjWrapper .pjBlArticle .pjBlArticleBody a:hover { color: #d0391c; }
+#pjWrapper .pjBlArticle .pjBlArticleBody h1,
+#pjWrapper .pjBlArticle .pjBlArticleBody h2,
+#pjWrapper .pjBlArticle .pjBlArticleBody h3,
+#pjWrapper .pjBlArticle .pjBlArticleBody h4,
+#pjWrapper .pjBlArticle .pjBlArticleBody h5,
+#pjWrapper .pjBlArticle .pjBlArticleBody h6 { color: #37383a; }
+
+#pjWrapper .pjBlArticle .pjBlArticleSocials { border-bottom-color: #ded8da; }
+#pjWrapper .pjBlArticle .pjBlArticleComments .pjBlArticleCommentsTitle { color: #37383a; }
+#pjWrapper .pjBlComment .pjBlCommentHead { border-bottom-color: #ded8da; }
+#pjWrapper .pjBlComment .pjBlCommentHead .pjBlCommentAuthor { color: #37383a; }
+#pjWrapper .pjBlComment .pjBlCommentHead .pjBlCommentMeta { color: #565b5e; }

@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /app/config/
+Disallow: /app/controllers/
+Disallow: /_to_delete/
+Disallow: /index.php?controller=pjAdmin
+Allow: /
+
+# The blog's JavaScript/CSS (core/, app/web/) must stay crawlable: Google
+# renders the embed with them.
+Sitemap: https://demo.phpjabbers.com/scripts/stiva-blog-script/sitemap.xml

@@ -1,0 +1,437 @@
+<?php
+if (!defined("ROOT_PATH"))
+{
+	header("HTTP/1.1 403 Forbidden");
+	exit;
+}
+class pjAppController extends pjController
+{
+	public $models = array();
+	
+	public $option_arr = array();
+
+	public $defaultLocale = 'admin_locale_id';
+	
+	public $defaultFields = 'fields';
+	
+	public $defaultFieldsIndex = 'fields_index';
+	
+	protected function loadSetFields($force=FALSE, $locale_id=NULL, $fields=NULL)
+	{
+		if (is_null($locale_id))
+		{
+			$locale_id = $this->getLocaleId();
+		}
+		
+		if (is_null($fields))
+		{
+			$fields = $this->defaultFields;
+		}
+		
+		$registry = pjRegistry::getInstance();
+		if ($force
+				|| !isset($_SESSION[$this->defaultFieldsIndex])
+				|| $_SESSION[$this->defaultFieldsIndex] != $this->option_arr['o_fields_index']
+				|| !isset($_SESSION[$fields])
+				|| empty($_SESSION[$fields]))
+		{
+			pjAppController::setFields($locale_id);
+	
+			# Update session
+			if ($registry->is('fields'))
+			{
+				$_SESSION[$fields] = $registry->get('fields');
+			}
+			$_SESSION[$this->defaultFieldsIndex] = $this->option_arr['o_fields_index'];
+		}
+	
+		if (isset($_SESSION[$fields]) && !empty($_SESSION[$fields]))
+		{
+			# Load fields from session
+			$registry->set('fields', $_SESSION[$fields]);
+		}
+		
+		return TRUE;
+	}
+	
+	public function isOneAdminReady()
+	{
+		return $this->isAdmin();
+	}
+	
+	public static function setTimezone($timezone="UTC")
+    {
+    	if (in_array(version_compare(phpversion(), '5.1.0'), array(0,1)))
+		{
+			date_default_timezone_set($timezone);
+		} else {
+			$safe_mode = ini_get('safe_mode');
+			if ($safe_mode)
+			{
+				putenv("TZ=".$timezone);
+			}
+		}
+    }
+
+	public static function setMySQLServerTime($offset="-0:00")
+    {
+		pjAppModel::factory()->prepare("SET SESSION time_zone = :offset;")->exec(compact('offset'));
+    }
+    
+	public function setTime()
+	{
+		if (isset($this->option_arr['o_timezone']))
+		{
+			$offset = $this->option_arr['o_timezone'] / 3600;
+			if ($offset > 0)
+			{
+				$offset = "-".$offset;
+			} elseif ($offset < 0) {
+				$offset = "+".abs($offset);
+			} elseif ($offset === 0) {
+				$offset = "+0";
+			}
+	
+			pjAppController::setTimezone('Etc/GMT' . $offset);
+			if (strpos($offset, '-') !== false)
+			{
+				$offset = str_replace('-', '+', $offset);
+			} elseif (strpos($offset, '+') !== false) {
+				$offset = str_replace('+', '-', $offset);
+			}
+			pjAppController::setMySQLServerTime($offset . ":00");
+		}
+	}
+    
+    public function beforeFilter()
+    {
+    	$this->appendJs('jquery.min.js', PJ_THIRD_PARTY_PATH . 'jquery/');
+		$baseDir = defined("PJ_INSTALL_PATH") ? PJ_INSTALL_PATH : null;
+		$dm = new pjDependencyManager($baseDir, PJ_THIRD_PARTY_PATH);
+		$dm->load(PJ_CONFIG_PATH . 'dependencies.php')->resolve();
+		$this->appendJs('jquery-migrate.min.js', $dm->getPath('jquery_migrate'), FALSE, FALSE);
+		$this->appendJs('pjAdminCore.js');
+		$this->appendCss('reset.css');
+
+		$this->appendJs('js/jquery-ui.custom.min.js', PJ_THIRD_PARTY_PATH . 'jquery_ui/');
+		$this->appendCss('css/smoothness/jquery-ui.min.css', PJ_THIRD_PARTY_PATH . 'jquery_ui/');
+				
+		$this->appendCss('pj-all.css', PJ_FRAMEWORK_LIBS_PATH . 'pj/css/');
+		$this->appendCss('admin.css');
+		
+    	if ($_GET['controller'] != 'pjInstaller')
+		{
+			$this->pjCheckCsrf();
+			$this->models['Option'] = pjOptionModel::factory();
+			$this->option_arr = $this->models['Option']->getPairs($this->getForeignId());
+			$this->set('option_arr', $this->option_arr);
+			$this->setTime();
+			
+			if (!isset($_SESSION[$this->defaultLocale]))
+			{				
+				$locale_arr = pjLocaleModel::factory()->where('is_default', 1)->limit(1)->findAll()->getData();
+				if (count($locale_arr) === 1)
+				{
+					$this->setLocaleId($locale_arr[0]['id']);
+				}
+			}
+			$this->loadSetFields();
+		}
+    }
+
+	public function isAuthor()
+    {
+    	return $this->getRoleId() == 2;
+    }
+
+    /**
+     * Returns the per-session CSRF token, generating one if needed, and
+     * exposes it to the browser via a JS-readable cookie (admin panel).
+     */
+    public function pjGetCsrfToken()
+    {
+    	if (empty($_SESSION['pj_csrf_token']))
+    	{
+    		if (function_exists('random_bytes'))
+    		{
+    			$_SESSION['pj_csrf_token'] = bin2hex(random_bytes(32));
+    		}
+    		else
+    		{
+    			$_SESSION['pj_csrf_token'] = md5(uniqid(mt_rand(), true)) . md5(uniqid(mt_rand(), true));
+    		}
+    	}
+    	if (!headers_sent())
+    	{
+    		setcookie('pj_csrf_token', $_SESSION['pj_csrf_token'], 0, '/');
+    	}
+    	return $_SESSION['pj_csrf_token'];
+    }
+
+    /**
+     * Constant-time comparison of a submitted token against the session token.
+     */
+    public function pjValidateCsrf($token)
+    {
+    	if (empty($token) || empty($_SESSION['pj_csrf_token']))
+    	{
+    		return false;
+    	}
+    	if (function_exists('hash_equals'))
+    	{
+    		return hash_equals($_SESSION['pj_csrf_token'], (string) $token);
+    	}
+    	return $_SESSION['pj_csrf_token'] === (string) $token;
+    }
+
+    /**
+     * CSRF guard for the admin panel. Validates a token on every state-changing
+     * admin request (all POSTs plus state-changing GET actions). Authentication
+     * endpoints are exempt to avoid lock-out. The public site (pjFront / pjLoad)
+     * and the installer are not handled here. The token is read from a request
+     * header (AJAX) or a hidden POST field (forms) - never from the URL.
+     */
+    public function pjCheckCsrf()
+    {
+    	$controller = isset($_GET['controller']) ? $_GET['controller'] : '';
+    	if ($controller === 'pjFront' || $controller === 'pjLoad' || $controller === 'pjInstaller')
+    	{
+    		return;
+    	}
+
+    	// Make sure a token exists and is available to the browser.
+    	$this->pjGetCsrfToken();
+
+    	$action = isset($_GET['action']) ? $_GET['action'] : '';
+    	$method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : 'GET';
+
+    	// Login / forgot / logout require no token (avoids admin lock-out).
+    	if (in_array($action, array('pjActionLogin', 'pjActionForgot', 'pjActionLogout')))
+    	{
+    		return;
+    	}
+
+    	$needsCheck = false;
+    	if ($method === 'POST')
+    	{
+    		$needsCheck = true;
+    	}
+    	elseif (preg_match('/^pjAction(Delete|Clone|Status|SetActive|Sort|Duplicate|Remove)/i', $action))
+    	{
+    		$needsCheck = true;
+    	}
+
+    	if (!$needsCheck)
+    	{
+    		return;
+    	}
+
+    	// Read the token from the POST body (csrf_token field) or, for AJAX, from
+    	// the X-CSRF-Token header. Never from the URL / query string.
+    	$submitted = '';
+    	if (isset($_POST['csrf_token']))
+    	{
+    		$submitted = $_POST['csrf_token'];
+    	}
+    	elseif (isset($_SERVER['HTTP_X_CSRF_TOKEN']))
+    	{
+    		$submitted = $_SERVER['HTTP_X_CSRF_TOKEN'];
+    	}
+
+    	if (!$this->pjValidateCsrf($submitted))
+    	{
+    		if ($this->isXHR())
+    		{
+    			header('HTTP/1.1 403 Forbidden');
+    			echo '403';
+    			exit;
+    		}
+    		pjUtil::redirect($_SERVER['PHP_SELF'] . "?controller=pjAdminPosts&action=pjActionIndex&err=AG01");
+    	}
+    }
+
+    public function getForeignId()
+    {
+    	return 1;
+    }
+    
+    public static function setFields($locale)
+    {
+    	if(isset($_SESSION['lang_show_id']) && (int) $_SESSION['lang_show_id'] == 1)
+		{
+			$fields = pjMultiLangModel::factory()
+				->select('CONCAT(t1.content, CONCAT(":", t2.id, ":")) AS content, t2.key')
+				->join('pjField', "t2.id=t1.foreign_id", 'inner')
+				->where('t1.locale', $locale)
+				->where('t1.model', 'pjField')
+				->where('t1.field', 'title')
+				->findAll()
+				->getDataPair('key', 'content');
+		}else{
+			$fields = pjMultiLangModel::factory()
+				->select('t1.content, t2.key')
+				->join('pjField', "t2.id=t1.foreign_id", 'inner')
+				->where('t1.locale', $locale)
+				->where('t1.model', 'pjField')
+				->where('t1.field', 'title')
+				->findAll()
+				->getDataPair('key', 'content');
+		}
+		$registry = pjRegistry::getInstance();
+		$tmp = array();
+		if ($registry->is('fields'))
+		{
+			$tmp = $registry->get('fields');
+		}
+		$arrays = array();
+		foreach ($fields as $key => $value)
+		{
+			if (strpos($key, '_ARRAY_') !== false)
+			{
+				list($prefix, $suffix) = explode("_ARRAY_", $key);
+				if (!isset($arrays[$prefix]))
+				{
+					$arrays[$prefix] = array();
+				}
+				$arrays[$prefix][$suffix] = $value;
+			}
+		}
+		require PJ_CONFIG_PATH . 'settings.inc.php';
+		$fields = array_merge($tmp, $fields, $settings, $arrays);
+		$registry->set('fields', $fields);
+    }
+
+    public static function jsonDecode($str)
+	{
+		$Services_JSON = new pjServices_JSON();
+		return $Services_JSON->decode($str);
+	}
+	
+	public static function jsonEncode($arr)
+	{
+		$Services_JSON = new pjServices_JSON();
+		return $Services_JSON->encode($arr);
+	}
+	
+	public static function jsonResponse($arr)
+	{
+		header("Content-Type: application/json; charset=utf-8");
+		echo pjAppController::jsonEncode($arr);
+		exit;
+	}
+
+	public function getLocaleId()
+	{
+		return isset($_SESSION[$this->defaultLocale]) && (int) $_SESSION[$this->defaultLocale] > 0 ? (int) $_SESSION[$this->defaultLocale] : false;
+	}
+	
+	public function setLocaleId($locale_id)
+	{
+		$_SESSION[$this->defaultLocale] = (int) $locale_id;
+	}
+	public function pjActionCheckInstall()
+	{
+		$this->setLayout('pjActionEmpty');
+		
+		$result = array('status' => 'OK', 'code' => 200, 'text' => 'Operation succeeded', 'info' => array());
+		$folders = array(
+							'app/web/upload', 
+							'app/web/upload/medium', 
+							'app/web/upload/source', 
+							'app/web/upload/thumb',
+							'app/web/upload/tinymce-source', 
+							'app/web/upload/tinymce-thumbs'
+						);
+		foreach ($folders as $dir)
+		{
+			if (!is_writable($dir))
+			{
+				$result['status'] = 'ERR';
+				$result['code'] = 101;
+				$result['text'] = 'Permission requirement';
+				$result['info'][] = sprintf('Folder \'<span class="bold">%1$s</span>\' is not writable. You need to set write permissions (chmod 777) to directory located at \'<span class="bold">%1$s</span>\'', $dir);
+			}
+		}
+		
+		return $result;
+	}
+	public function friendlyURL($str, $divider='-')
+	{
+		$str = mb_strtolower($str, mb_detect_encoding($str));
+		$str = trim($str);
+		$str = str_replace(array('Ä','ä','É','é','Ö','ö','Ü','ü'), array('A','a','E','e','O','o','U','u'), $str);
+    $str = preg_replace('/[^\w\s\-]+/u', '', $str);
+		$str = preg_replace('/[_|\s]+/', $divider, $str);
+		$str = preg_replace('/[-]+/', $divider, $str);
+		$str = preg_replace('/^-+|-+$/', '', $str);
+		return $str;
+	}
+
+	/**
+	 * Link to a single post. The JS embed (pjEmbed) overrides this with the
+	 * blog page URL + ?post=<url-slug>; this script-URL form is only used when
+	 * the front views are opened directly.
+	 *
+	 * @param array $arr Post row - must include 'id'
+	 * @param boolean $htmlEncode Use '&amp;' instead of '&' (for use inside an HTML attribute)
+	 * @access public
+	 * @return string
+	 */
+	public function postDetailUrl($arr, $htmlEncode = false)
+	{
+		$amp = $htmlEncode ? '&amp;' : '&';
+		$url = $_SERVER['SCRIPT_NAME'] . '?controller=pjLoad' . $amp . 'action=pjActionView' . $amp . 'id=' . (int) $arr['id'];
+		if (isset($_GET['iframe']))
+		{
+			$url .= $amp . 'iframe';
+		}
+		return $url;
+	}
+
+	/**
+	 * Link to a category listing. The JS embed (pjEmbed) overrides this with
+	 * the blog page URL + ?blog_category=<url-slug>; this script-URL form is
+	 * only used when the front views are opened directly.
+	 *
+	 * @param int $id Category id
+	 * @param boolean $htmlEncode Use '&amp;' instead of '&' (for use inside an HTML attribute)
+	 * @access public
+	 * @return string
+	 */
+	public function categoryUrl($id, $htmlEncode = false)
+	{
+		$amp = $htmlEncode ? '&amp;' : '&';
+		$url = $_SERVER['SCRIPT_NAME'] . '?controller=pjLoad' . $amp . 'action=pjActionIndex' . $amp . 'category_id=' . (int) $id;
+		if (isset($_GET['iframe']))
+		{
+			$url .= $amp . 'iframe';
+		}
+		return $url;
+	}
+
+	public function getFromEmail()
+	{
+		if (isset($this->option_arr['o_from_email']) && !empty($this->option_arr['o_from_email']))
+		{
+			return $this->option_arr['o_from_email'];
+		}
+		$arr = pjUserModel::factory()->find(1)->getData();
+		$email = $arr['email'];
+		return $email;
+	}
+	
+	public function isAllComments($id)
+	{
+		$is_all = false;
+		$arr = pjUserModel::factory()->find($id)->getData();
+		if(!empty($arr))
+		{
+			if($arr['receive_notify'] == 'A')
+			{
+				$is_all = true;
+			}
+		}
+		return $is_all;
+	}
+}
+?>

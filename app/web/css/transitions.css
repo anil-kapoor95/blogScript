@@ -1,0 +1,17 @@
+/* ==========================================================================
+	#Transitions
+========================================================================== */
+#pjWrapper .btn,
+#pjWrapper .pjBlSocials a,
+#pjWrapper .form-control,
+#pjWrapper .pjBlNav .pjBlSearch label,
+#pjWrapper .pjBlFiltersDropdown,
+#pjWrapper .pjBlFilter a,
+#pjWrapper .pjBlPost .pjBlPostImageOverlay,
+#pjWrapper .pjBlCommentsCounter,
+#pjWrapper .pjBlPost .pjBlPostTitle a,
+#pjWrapper .pjBlPost .pjBlPostMeta li,
+#pjWrapper .pjBlPost .pjBlPostMeta li a,
+#pjWrapper .pjBlPaging .pagination a,
+#pjWrapper .pjBlArticle .pjBlArticleBody a,
+#pjWrapper .pjBlArticle .pjBlArticleHead .pjBlArticleMeta li a { -webkit-transition: all .5s ease-in-out; -moz-transition: all .5s ease-in-out; -ms-transition: all .5s ease-in-out; -o-transition: all .5s ease-in-out; transition: all .5s ease-in-out; }
