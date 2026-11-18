@@ -4,13 +4,15 @@
  * one flag per language, each a link to this same page with &locale=<ID>.
  *
  * Expects $tpl['lp_arr'] (languages with 'flag_url') and $tpl['content_locale'] (the language being edited).
- * Does nothing when there is only one language.
+ * Does nothing when there is only one language. Include it inside each tab panel (below the info notice) and
+ * set $langbar_tab to that panel's id so the page reopens on the same tab after the language switch.
  */
 if (isset($tpl['lp_arr']) && count($tpl['lp_arr']) > 1 && isset($tpl['option_arr']['o_multi_lang']) && (int) $tpl['option_arr']['o_multi_lang'] === 1)
 {
 	$content_flag = '';
 	$bar_params = $_GET;
 	unset($bar_params['locale'], $bar_params['err'], $bar_params['img_err']);
+	if (!empty($langbar_tab)) { $bar_params['tab_id'] = $langbar_tab; }
 	?>
 	<div class="pj-content-langbar pj-form-langbar b10">
 		<a href="#" class="pj-form-langbar-tip" title="<?php echo pjSanitize::html(__('lblContentLanguageHint', true)); ?>" onclick="return false;"></a>
@@ -33,6 +35,7 @@ if (isset($tpl['lp_arr']) && count($tpl['lp_arr']) > 1 && isset($tpl['option_arr
 		?><p class="pj-langbar-notice"><?php __('lblNoTranslationYet'); ?></p><?php
 	}
 	?>
+	<?php if (empty($GLOBALS['pj_langbar_js'])) : $GLOBALS['pj_langbar_js'] = true; ?>
 	<script type="text/javascript">
 	(function () {
 		// Switching language reloads the page: warn first when the form has unsaved changes.
@@ -58,6 +61,7 @@ if (isset($tpl['lp_arr']) && count($tpl['lp_arr']) > 1 && isset($tpl['option_arr
 		});
 	})();
 	</script>
+	<?php endif; ?>
 	<?php
 }
 ?>

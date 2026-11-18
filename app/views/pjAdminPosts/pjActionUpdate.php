@@ -56,7 +56,6 @@ if (isset($tpl['status']))
 		<?php
 		// Text fields of a language that is not the default one may stay empty (the default text is shown instead)
 		$is_default_content = (int) $tpl['content_locale'] === (int) $tpl['default_locale_id'];
-		include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php';
 		?>
 		<input type="hidden" name="id" value="<?php echo (int) $tpl['arr']['id']; ?>" />
 		<input type="hidden" name="tab_id" value="<?php echo isset($_GET['tab_id']) && !empty($_GET['tab_id']) ? $_GET['tab_id'] : 'tabs-1'; ?>" />
@@ -70,6 +69,7 @@ if (isset($tpl['status']))
 				<?php
 				pjUtil::printNotice(__('infoUpdatePostTitle', true, false), __('infoUpdatePostBody', true, false)); 
 				?>
+				<?php $langbar_tab = 'tabs-1'; include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php'; ?>
 				<div class="float_left w500">
 					<p>
 						<label class="title110"><?php __('lblCategory'); ?></label>
@@ -149,7 +149,7 @@ if (isset($tpl['status']))
 				<p>
 					<label class="title110"><?php __('lblTitle', false, true); ?></label>
 					<span class="inline_block">
-						<input type="text" name="title" id="title" class="pj-form-field<?php echo $is_default_content ? ' required' : NULL; ?> w400 float_left r10" maxlength="200" value="<?php echo pjSanitize::html($tpl['arr']['title']);?>" /><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input float_left r10"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
+						<input type="text" name="title" id="title" class="pj-form-field<?php echo $is_default_content ? ' required' : NULL; ?> w400 float_left r10" style="width: 372px;" maxlength="200" value="<?php echo pjSanitize::html($tpl['arr']['title']);?>" /><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input float_left r10"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 						<span class="post-rating">
 							<select name="rate">
 								<?php
@@ -170,7 +170,7 @@ if (isset($tpl['status']))
 				<p>
 					<label class="title110"><?php __('lblBody'); ?></label>
 					<span class="inline_block">
-						<textarea id="body" name="body" class="mceEditor" style="width: 600px; height: 250px"><?php echo !empty($tpl['arr']['body']) ? stripslashes($tpl['arr']['body']) : '';?></textarea><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
+						<span class="pj-body-wrap"><textarea id="body" name="body" class="mceEditor" style="width: 570px; height: 250px"><?php echo !empty($tpl['arr']['body']) ? stripslashes($tpl['arr']['body']) : '';?></textarea><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?></span>
 					</span>
 				</p>
 				<p>
@@ -233,6 +233,7 @@ if (isset($tpl['status']))
 				<?php
 				pjUtil::printNotice(__('infoUpdateSEOTitle', true, false), __('infoUpdateSEOBody', true, false)); 
 				?>
+				<?php $langbar_tab = 'tabs-2'; include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php'; ?>
 				<p>
 					<label class="title"><?php __('lblMetaTitle'); ?></label>
 					<span class="inline_block">

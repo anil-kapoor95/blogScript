@@ -1374,9 +1374,14 @@ em > label.err[style*="inline"] { display: inline-block !important; max-width: 5
 	color: #6b7a89;
 	font-size: 12px;
 }
-/* The flag next to a translated field */
+/* The flag next to a translated field: right of the input, top-aligned (as in Property Listing) */
+.pj-multilang-input{
+	display: inline-block;
+	margin-left: 8px;
+	vertical-align: top;
+}
 .pj-multilang-input img{
-	vertical-align: middle;
+	vertical-align: top;
 }
 
 /* Small screens: forms and language bars stack instead of overflowing */
@@ -1471,4 +1476,17 @@ em > label.err[style*="inline"] { display: inline-block !important; max-width: 5
 		width: auto;
 		margin-bottom: 4px;
 	}
+}
+
+/* Body editor: the language flag sits to the right of the editor, at its top (as for the other fields) */
+.pj-body-wrap{
+	display: inline-block;
+	position: relative;
+	padding-right: 28px;
+}
+.pj-body-wrap .pj-multilang-input{
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin-left: 0;
 }

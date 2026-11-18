@@ -13,10 +13,10 @@ if (isset($tpl['status']))
 	<form action="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminPosts&amp;action=pjActionCreate" method="post" id="frmCreatePost" class="form pj-form" autocomplete="off" enctype="multipart/form-data">
 		<input type="hidden" name="post_create" value="1" />
 		<input type="hidden" name="locale" value="<?php echo (int) $tpl['content_locale']; ?>" />
+		<input type="hidden" name="tab_id" value="<?php echo isset($_GET['tab_id']) && in_array($_GET['tab_id'], array('tabs-1', 'tabs-2')) ? $_GET['tab_id'] : 'tabs-1'; ?>" />
 		<?php
 		// Text fields of a language that is not the default one may stay empty (the default text is shown instead)
 		$is_default_content = (int) $tpl['content_locale'] === (int) $tpl['default_locale_id'];
-		include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php';
 		?>
 		<div id="aiDraftLoadedNotice" style="display: none; margin-bottom: 12px; padding: 8px 10px; border-radius: 3px; background: #e6f4ea; color: #1e6b34; border: 1px solid #b7dfc4;"><?php __('aiMsgDraftLoaded'); ?></div>
 		<div id="tabs">
@@ -29,6 +29,7 @@ if (isset($tpl['status']))
 				<?php
 				pjUtil::printNotice(__('infoAddPostTitle', true, false), __('infoAddPostBody', true, false));
 				?>
+				<?php $langbar_tab = 'tabs-1'; include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php'; ?>
 				<p>
 					<label class="title110"><?php __('lblCategory'); ?></label>
 					<span class="inline_block">
@@ -76,13 +77,13 @@ if (isset($tpl['status']))
 				<p>
 					<label class="title110"><?php __('lblTitle', false, true); ?></label>
 					<span class="inline_block">
-						<input type="text" name="title" id="title" class="pj-form-field<?php echo $is_default_content ? ' required' : NULL; ?> w400" maxlength="200"/><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input float_left r10"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
+						<input type="text" name="title" id="title" class="pj-form-field<?php echo $is_default_content ? ' required' : NULL; ?> w400" maxlength="200"/><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
 					</span>
 				</p>
 				<p>
 					<label class="title110"><?php __('lblBody'); ?></label>
 					<span class="inline_block">
-						<textarea id="body" name="body" class="mceEditor" style="width: 600px; height: 250px"></textarea><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?>
+						<span class="pj-body-wrap"><textarea id="body" name="body" class="mceEditor" style="width: 570px; height: 250px"></textarea><?php if (!empty($content_flag)) : ?><span class="pj-multilang-input"><img src="<?php echo pjSanitize::html($content_flag); ?>" alt="" /></span><?php endif; ?></span>
 					</span>
 				</p>
 				<p>
@@ -128,6 +129,7 @@ if (isset($tpl['status']))
 				</p>
 			</div>
 			<div id="tabs-2">
+				<?php $langbar_tab = 'tabs-2'; include PJ_VIEWS_PATH . 'pjLayouts/elements/langbar.php'; ?>
 				<p>
 					<label class="title"><?php __('lblMetaTitle'); ?></label>
 					<span class="inline_block">

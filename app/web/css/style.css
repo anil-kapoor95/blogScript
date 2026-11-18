@@ -673,3 +673,8 @@ body { background: #eef1f5; }
 		left: 0;
 	}
 }
+
+/* An open language menu may be taller than a short page (e.g. "No blog posts found"): do not clip it. */
+#pjWrapper .pjBlMain:has(details.pjBlLang[open]) { overflow: visible; }
+#pjWrapper .pjBlMain:has(details.pjBlLang[open]) .pjBlHeader { border-radius: 16px 16px 0 0; }
+#pjWrapper .pjBlLang .pjBlLangMenu { max-height: 70vh; overflow-y: auto; }

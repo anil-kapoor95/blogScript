@@ -20,7 +20,7 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 		    theme: "modern",
 		    browser_spellcheck : true,
 		    contextmenu: false,
-		    width: 600,
+		    width: 580,
 		    relative_urls: false,
 		    plugins: [
 		         "advlist autolink link image lists charmap print preview hr anchor pagebreak",
@@ -55,6 +55,12 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 				}
 			};
 		if ($tabs.length > 0 && tabs) {
+			// reopen on the tab that was active (e.g. after switching the content language)
+			var tabIdx = $tabs.find("> ul > li > a[href='#" + $(":input[name='tab_id']").val() + "']").parent().index();
+			if (tabIdx > 0) {
+				tOpt.selected = tabIdx;
+				tOpt.active = tabIdx;
+			}
 			$tabs.tabs(tOpt);
 		}
 
