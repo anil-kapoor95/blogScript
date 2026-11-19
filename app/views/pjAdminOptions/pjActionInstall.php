@@ -65,6 +65,13 @@ if (isset($tpl['status']))
 				</form>
 				<?php
 			}
+			// Label with an English fallback: a missing, empty or corrupted ("??" / "???") translation never reaches the screen
+			$pjLabel = function ($key, $default)
+			{
+				$text = __($key, true);
+				$text = is_string($text) ? trim($text) : '';
+				return ($text === '' || $text === $key || preg_match('/^[?\\x{FFFD}\\s]+$/u', $text)) ? $default : $text;
+			};
 			$showLangSelector = 'No';
 			foreach ($tpl['o_arr'] as $item)
 			{
@@ -80,11 +87,11 @@ if (isset($tpl['status']))
 				<input type="hidden" name="options_update" value="1" />
 				<input type="hidden" name="next_action" value="pjActionInstall" />
 				<p>
-					<label class="float_left w320 pt5"><?php $lblLangSel = __('opt_o_show_lang_selector', true); echo $lblLangSel !== '' && $lblLangSel !== 'opt_o_show_lang_selector' ? $lblLangSel : 'Display Language Selector on Frontend'; ?></label>
+					<label class="float_left w320 pt5"><?php echo pjSanitize::html($pjLabel('opt_o_show_lang_selector', 'Display Language Selector on Frontend')); ?></label>
 					<span class="inline_block">
 						<select name="value-enum-o_show_lang_selector" class="pj-form-field w100 float_left">
-							<option value="Yes|No::Yes"<?php echo $showLangSelector == 'Yes' ? ' selected="selected"' : NULL; ?>><?php __('lblYes'); ?></option>
-							<option value="Yes|No::No"<?php echo $showLangSelector == 'No' ? ' selected="selected"' : NULL; ?>><?php __('lblNo'); ?></option>
+							<option value="Yes|No::Yes"<?php echo $showLangSelector == 'Yes' ? ' selected="selected"' : NULL; ?>><?php echo pjSanitize::html($pjLabel('lblYes', 'Yes')); ?></option>
+							<option value="Yes|No::No"<?php echo $showLangSelector == 'No' ? ' selected="selected"' : NULL; ?>><?php echo pjSanitize::html($pjLabel('lblNo', 'No')); ?></option>
 						</select>
 						<input type="submit" value="<?php __('btnSave'); ?>" class="pj-button float_left l5 align_middle" />
 					</span>

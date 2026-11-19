@@ -261,26 +261,51 @@ class pjAppController extends pjController
     
     public static function setFields($locale)
     {
-    	if(isset($_SESSION['lang_show_id']) && (int) $_SESSION['lang_show_id'] == 1)
-		{
-			$fields = pjMultiLangModel::factory()
-				->select('CONCAT(t1.content, CONCAT(":", t2.id, ":")) AS content, t2.key')
-				->join('pjField', "t2.id=t1.foreign_id", 'inner')
-				->where('t1.locale', $locale)
-				->where('t1.model', 'pjField')
-				->where('t1.field', 'title')
-				->findAll()
-				->getDataPair('key', 'content');
-		}else{
-			$fields = pjMultiLangModel::factory()
-				->select('t1.content, t2.key')
-				->join('pjField', "t2.id=t1.foreign_id", 'inner')
-				->where('t1.locale', $locale)
-				->where('t1.model', 'pjField')
-				->where('t1.field', 'title')
-				->findAll()
-				->getDataPair('key', 'content');
-		}
+    	# A label is unusable when it is empty or only "?" characters (text lost to a bad charset/import)
+    	$isBad = function ($v) {
+    		$v = is_string($v) ? trim($v) : '';
+    		return $v === '' || preg_match('/^[?\\x{FFFD}\\s]+$/u', $v);
+    	};
+    	$load = function ($loc) {
+    		return pjMultiLangModel::factory()
+    			->select('t1.content, t2.id, t2.key')
+    			->join('pjField', "t2.id=t1.foreign_id", 'inner')
+    			->where('t1.locale', $loc)
+    			->where('t1.model', 'pjField')
+    			->where('t1.field', 'title')
+    			->findAll()
+    			->getData();
+    	};
+    	$showId = isset($_SESSION['lang_show_id']) && (int) $_SESSION['lang_show_id'] == 1;
+    	
+    	# Fallback (default) language: English if installed, otherwise the first language
+    	$fallback = NULL;
+    	$loc_arr = pjLocaleModel::factory()->orderBy('t1.id ASC')->findAll()->getData();
+    	foreach ($loc_arr as $l)
+    	{
+    		if ($fallback === NULL) { $fallback = (int) $l['id']; }
+    		if (isset($l['language_iso']) && strtolower(substr($l['language_iso'], 0, 2)) == 'en') { $fallback = (int) $l['id']; break; }
+    	}
+    	
+    	$fields = array();
+    	$ids = array();
+    	foreach ($load($locale) as $row)
+    	{
+    		if (!$isBad($row['content'])) { $fields[$row['key']] = $row['content']; }
+    		$ids[$row['key']] = $row['id'];
+    	}
+    	if ($fallback !== NULL && (int) $fallback !== (int) $locale)
+    	{
+    		foreach ($load($fallback) as $row)
+    		{
+    			if (!isset($fields[$row['key']]) && !$isBad($row['content'])) { $fields[$row['key']] = $row['content']; }
+    			if (!isset($ids[$row['key']])) { $ids[$row['key']] = $row['id']; }
+    		}
+    	}
+    	if ($showId)
+    	{
+    		foreach ($fields as $k => $v) { $fields[$k] = $v . ':' . $ids[$k] . ':'; }
+    	}
 		$registry = pjRegistry::getInstance();
 		$tmp = array();
 		if ($registry->is('fields'))
