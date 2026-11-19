@@ -350,6 +350,11 @@ class pjAdminOptions extends pjAdmin
 					$_POST['value-string-o_blog_page'] = pjUtil::cleanPageUrl($blogPage);
 				}
 
+				if (isset($_POST['value-enum-o_show_lang_selector']))
+				{
+					$this->ensureLangSelectorOption();
+				}
+
 				$OptionModel = new pjOptionModel();
 
 				foreach ($_POST as $key => $value)
@@ -553,12 +558,39 @@ class pjAdminOptions extends pjAdmin
 		pjAppController::jsonResponse(array('status' => 'ERR', 'code' => 104, 'text' => __('emailMsgSendFail', true) . (!empty($err) ? ' (' . $err . ')' : '')));
 	}
 	
+	/**
+	 * "Display Language Selector on Frontend" lives in the options table. When the script files are upgraded but the
+	 * database update has not been run, the row is missing: the Install page then shows the default (No) and Save
+	 * silently changes nothing. Create the row (default No) when it is missing so the setting always persists.
+	 */
+	private function ensureLangSelectorOption()
+	{
+		$row = pjOptionModel::factory()
+			->where('t1.foreign_id', $this->getForeignId())
+			->where('t1.key', 'o_show_lang_selector')
+			->limit(1)
+			->findAll()
+			->getData();
+		if (empty($row))
+		{
+			pjOptionModel::factory()->setAttributes(array(
+				'foreign_id' => $this->getForeignId(),
+				'key' => 'o_show_lang_selector',
+				'tab_id' => 99,
+				'value' => 'Yes|No::No',
+				'type' => 'enum',
+				'is_visible' => 0
+			))->insert();
+		}
+	}
+
 	public function pjActionInstall()
 	{
 		$this->checkLogin();
 		
 		if ($this->isAdmin())
 		{
+			$this->ensureLangSelectorOption();
 			$this->set('o_arr', $this->models['Option']
 				->where('t1.foreign_id', $this->getForeignId())
 				->orderBy('t1.key ASC')

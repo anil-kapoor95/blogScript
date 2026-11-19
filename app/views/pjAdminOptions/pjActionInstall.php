@@ -80,7 +80,7 @@ if (isset($tpl['status']))
 				<input type="hidden" name="options_update" value="1" />
 				<input type="hidden" name="next_action" value="pjActionInstall" />
 				<p>
-					<label class="float_left w320 pt5"><?php __('opt_o_show_lang_selector'); ?></label>
+					<label class="float_left w320 pt5"><?php $lblLangSel = __('opt_o_show_lang_selector', true); echo $lblLangSel !== '' && $lblLangSel !== 'opt_o_show_lang_selector' ? $lblLangSel : 'Display Language Selector on Frontend'; ?></label>
 					<span class="inline_block">
 						<select name="value-enum-o_show_lang_selector" class="pj-form-field w100 float_left">
 							<option value="Yes|No::Yes"<?php echo $showLangSelector == 'Yes' ? ' selected="selected"' : NULL; ?>><?php __('lblYes'); ?></option>
