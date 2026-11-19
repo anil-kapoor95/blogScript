@@ -438,6 +438,26 @@ class pjAppController extends pjController
 	}
 
 	/**
+	 * Name of a language for the AI prompt, e.g. "Deutsch (Deutschland) [de-DE]".
+	 *
+	 * @param integer $locale_id Language ID (the default language when empty)
+	 * @access public
+	 * @return string
+	 */
+	public function getLocaleLabel($locale_id = 0)
+	{
+		$locale_id = (int) $locale_id > 0 ? (int) $locale_id : (int) $this->getDefaultLocaleId();
+		foreach ($this->getLocales() as $locale)
+		{
+			if ((int) $locale['id'] === $locale_id)
+			{
+				return trim((!empty($locale['name']) ? $locale['name'] : '') . ' [' . $locale['language_iso'] . ']');
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * @access public
 	 * @return integer|boolean Default language ID or FALSE
 	 */

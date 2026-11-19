@@ -28,7 +28,20 @@
 		} catch (e) {}
 	}
 
+	// Install config > Language: the install code opens the blog in that language
+	// (&locale=<language ID> on the script URL); the default language adds nothing.
+	function langInit() {
+		var sel = document.getElementById('install_locale'), area = document.getElementById('pjEmbedCode');
+		if (!sel || !area) { return; }
+		var src = sel.getAttribute('data-src');
+		sel.addEventListener('change', function () {
+			var url = src + (sel.value ? '&locale=' + encodeURIComponent(sel.value) : '');
+			area.value = '<div id="pjBlogEmbed"></div>\n<script src="' + url + '"></script>';
+		}, false);
+	}
+
 	function init() {
+		langInit();
 		var b = document.querySelectorAll('.pj-embed-copy');
 		for (var i = 0; i < b.length; i++) {
 			b[i].addEventListener('click', function () { copy(this); }, false);

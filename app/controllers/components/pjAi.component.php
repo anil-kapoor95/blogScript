@@ -64,7 +64,7 @@ class pjAi
 	 * using the provider/model/key already saved in AI Settings.
 	 * Returns array('ok' => bool, 'title' => string, 'body' => string, 'text' => string on failure).
 	 */
-	static public function generatePost($provider, $model, $apiKey, $topic)
+	static public function generatePost($provider, $model, $apiKey, $topic, $language = '')
 	{
 		if (!function_exists('curl_init'))
 		{
@@ -84,7 +84,8 @@ class pjAi
 				. "TITLE: <a concise, compelling post title, no surrounding quotes>\n"
 				. "---\n"
 				. "<the post body as clean HTML using only <p>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em> tags; "
-				. "no <html>, <head>, <body>, <script>, inline styles, or the title repeated inside the body>";
+				. "no <html>, <head>, <body>, <script>, inline styles, or the title repeated inside the body>"
+				. self::_languageRule($language);
 		$user = "Topic: " . $topic;
 
 		switch ($provider)
@@ -108,6 +109,22 @@ class pjAi
 		}
 
 		return self::_parseGenerated($raw['text']);
+	}
+
+	/**
+	 * Instruction that makes the model write the whole draft (title, body and the SEO fields) in the
+	 * language the post is being written in - the topic itself may be typed in any language. The
+	 * block labels (TITLE:, SEO_TITLE: ...) stay in English because they are parsed afterwards.
+	 */
+	static private function _languageRule($language)
+	{
+		$language = trim((string) $language);
+		if ($language === '')
+		{
+			return '';
+		}
+		return "\n\nLANGUAGE: write the title, the body and the SEO fields entirely in " . $language
+			. ", whatever language the topic is written in. Keep the labels (TITLE:, SEO_TITLE:, SEO_DESCRIPTION:, BODY:, ===OPTION_<n>===) and the HTML tag names exactly as specified above.";
 	}
 
 	static private function _parseGenerated($text)
@@ -140,7 +157,7 @@ class pjAi
 	 * Returns array('ok' => bool, 'options' => array[], 'text' => string on failure).
 	 * Each option is array('title', 'body', 'meta_title', 'meta_description').
 	 */
-	static public function generatePostOptions($provider, $model, $apiKey, $topic, $tone = '', $length = '', $count = 3)
+	static public function generatePostOptions($provider, $model, $apiKey, $topic, $tone = '', $length = '', $count = 3, $language = '')
 	{
 		if (!function_exists('curl_init'))
 		{
@@ -206,7 +223,8 @@ class pjAi
 				. "BODY:\n"
 				. "<the post body as clean HTML using only <p>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em> tags; "
 				. "no <html>, <head>, <body>, <script>, inline styles, or the title repeated inside the body>\n\n"
-				. "Replace <n> with 1, 2, 3, ... {$count} in order, one block per option.";
+				. "Replace <n> with 1, 2, 3, ... {$count} in order, one block per option."
+				. self::_languageRule($language);
 		$user = "Topic: " . $topic;
 
 		// Generating multiple full drafts needs more headroom than a single
@@ -214,8 +232,14 @@ class pjAi
 		// characters per token for English, plus a buffer per option for the
 		// title/SEO fields and formatting) instead of a fixed budget, so a
 		// "short" request doesn't pay for tokens only a "long" one needs.
-		$maxTokens = (int) ((($targetChars / 3) + 400) * $count);
-		$maxTokens = max(600, min(12000, $maxTokens));
+		// A character costs about 1 token in a non-Latin script (Cyrillic, Greek,
+		// Arabic, CJK ...) against about 1/3 token in Latin text, so the budget
+		// is sized by the script of the language the draft is written in -
+		// otherwise the reply is cut off mid-draft (a body of one character and
+		// missing options).
+		$charsPerToken = (trim((string) $language) !== '' && preg_match('/[^\x{0000}-\x{024F}\x{1E00}-\x{1EFF}]/u', $language)) ? 1 : 3;
+		$maxTokens = (int) ((($targetChars / $charsPerToken) + 400) * $count);
+		$maxTokens = max(600, min(16000, $maxTokens));
 
 		switch ($provider)
 		{
@@ -756,7 +780,7 @@ class pjAi
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 120);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 12);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 

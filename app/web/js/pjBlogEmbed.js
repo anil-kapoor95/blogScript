@@ -89,12 +89,32 @@
 		return a.join('&');
 	}
 
+	// The blog parameters of this page's address, without the language.
+	function buildQueryNoLang() {
+		var o = pageParams();
+		delete o.blog_lang;
+		return buildQuery(o);
+	}
+
 	function hostUrl(params) {
 		params = params || {};
-		// The language of the page stays when a link does not set its own.
-		if (params.blog_lang === undefined && state.lang) { params.blog_lang = state.lang; }
+		// Only with a Blog page URL does a link name its language; otherwise the address stays
+		// clean (the language is remembered, see rememberLang()) and a post's slug tells it.
+		if (!langInUrl()) { params.blog_lang = undefined; }
+		else if (params.blog_lang === undefined && state.lang) { params.blog_lang = state.lang; }
 		var q = buildQuery(params), base = linkBase();
 		return base + (q ? (base.indexOf('?') === -1 ? '?' : '&') + q : '');
+	}
+
+	function langInUrl() { return !!(state.render && state.render.langInUrl); }
+
+	// The language the visitor chose is kept in the browser (per install code), not in the address.
+	function langKey() { return 'pjbl_lang|' + ((state.boot && state.boot.content) || '') + '|' + ((state.boot && state.boot.lang) || ''); }
+	function storedLang() {
+		try { var v = window.localStorage.getItem(langKey()); return v === null ? null : (v === '-' ? '' : v); } catch (e) { return null; }
+	}
+	function rememberLang(lang) {
+		try { window.localStorage.setItem(langKey(), lang ? lang : '-'); } catch (e) {}
 	}
 
 	function pageParams() {
@@ -280,7 +300,7 @@
 		if (!href || href.indexOf('controller=pjLoad') === -1) { return null; }
 		var i = href.indexOf('?');
 		var q = parseQuery(i === -1 ? '' : href.substring(i + 1).replace(/#.*$/, '').replace(/&amp;/g, '&'));
-		if (q.action === 'pjActionView' && q.id) { return hostUrl({ blog_post_id: q.id, blog_lang: q.blog_lang }); }
+		if (q.action === 'pjActionView' && q.id) { return q.slug ? hostUrl({ post: q.slug, blog_lang: q.blog_lang }) : hostUrl({ blog_post_id: q.id, blog_lang: q.blog_lang }); }
 		return hostUrl({
 			blog_lang: q.blog_lang,
 			blog_category: q.blog_category || q.category_id,
@@ -310,7 +330,7 @@
 			blog_search: f.keyword ? f.keyword.value : '',
 			blog_category: f.category_id ? f.category_id.value : '',
 			blog_archive: archive !== undefined ? archive : (f.archive ? f.archive.value : ''),
-			blog_lang: f.blog_lang ? f.blog_lang.value : undefined
+			blog_lang: (f.blog_lang && langInUrl()) ? f.blog_lang.value : undefined
 		};
 	}
 
@@ -344,8 +364,16 @@
 		start(function () {
 			state.host = resolveHost(CFG.host || 'pjBlogEmbed', selfScript);
 			state.params = pageParams();
-			// Language of this page (empty = the default language).
-			state.lang = state.params.blog_lang || '';
+			// Language of this page (empty = the default language): one named by an old-style address
+			// (?blog_lang=), else the visitor's own choice, else the install code's (&locale=).
+			var kept = storedLang();
+			state.lang = state.params.blog_lang !== undefined ? state.params.blog_lang : (kept !== null ? kept : (CFG.lang || ''));
+			state.params.blog_lang = state.lang || undefined;
+			// Language menu: remember the chosen language (the link itself is a clean address).
+			state.host.addEventListener('click', function (e) {
+				var a = e.target && e.target.closest ? e.target.closest('a.pjBlLangItem') : null;
+				if (a && a.getAttribute('data-pjlang') !== null) { rememberLang(a.getAttribute('data-pjlang')); }
+			}, false);
 			// Single-post install code (&post=<slug> on the script URL): show that
 			// post unless this page URL asks for something else.
 			state.single = false;
@@ -379,6 +407,18 @@
 		// CSS first (same response as the HTML), then the blog.
 		addStyles(CFG.styles);
 		for (var i = 0; i < CFG.sheets.length; i++) { addCss(CFG.sheets[i]); }
+		// The language the server showed (e.g. the post's own, named by its slug) is the page's language.
+		if (CFG.lang !== undefined && CFG.lang !== null) {
+			state.lang = CFG.lang;
+			state.params.blog_lang = CFG.lang || undefined;
+			if (!CFG.langInUrl) {
+				rememberLang(CFG.lang);
+				// An old-style address (?blog_lang=...) is tidied up.
+				if (/[?&]blog_lang=/.test(location.search) && window.history && history.replaceState) {
+					try { history.replaceState(null, '', pageBase() + (buildQueryNoLang() ? (pageBase().indexOf('?') === -1 ? '?' : '&') + buildQueryNoLang() : '') + location.hash); } catch (e) {}
+				}
+			}
+		}
 		state.host.innerHTML = CFG.html;
 		wire(state.host);
 		runScripts(state.host);

@@ -39,6 +39,12 @@ if (isset($tpl['status']))
 					<textarea id="aiw_topic" class="pj-form-field w400" rows="2" maxlength="300"></textarea>
 				</span>
 			</p>
+			<?php if (!empty($tpl['ai_language'])) : ?>
+			<p>
+				<label class="title110"><?php __('lblAiWriteLanguage'); ?></label>
+				<span class="inline_block pt5"><strong id="aiw_language"><?php echo pjSanitize::html($tpl['ai_language']); ?></strong></span>
+			</p>
+			<?php endif; ?>
 			<p>
 				<label class="title110"><?php __('lblAiTone'); ?></label>
 				<span class="inline_block">
@@ -133,6 +139,7 @@ if (isset($tpl['status']))
 	</style>
 
 	<script type="text/javascript">
+	var pjAiWizardLocale = <?php echo (int) (isset($tpl['ai_locale_id']) ? $tpl['ai_locale_id'] : 0); ?>;
 	var pjAiWizardLabels = {
 		enterTopic:     <?php echo pjAppController::jsonEncode(__('aiMsgEnterTopic', true)); ?>,
 		generating:     <?php echo pjAppController::jsonEncode(__('aiMsgGenerating', true)); ?>,

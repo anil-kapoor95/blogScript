@@ -1,2 +1,5 @@
 /_backup_before_language
 *.jpg
+*.html
+/_to_delete
+*.zip

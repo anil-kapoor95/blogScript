@@ -68,6 +68,10 @@ $cfg = array(
 	'sheets'     => $sheets,
 	'styles'     => $styles,
 	'view'       => $isDetail ? 'detail' : 'list',
+	// Language shown ('' = the default one; null = one-language blog) and whether links name it
+	// (only with a Blog page URL; otherwise the address stays clean and the runtime remembers it).
+	'lang'       => $controller->isMultiLang() ? ($controller->localeQuery() !== '' ? $controller->localeIso($controller->getLocaleId()) : '') : null,
+	'langInUrl'  => $controller->langInUrl(),
 	'found'      => !empty($tpl['found']),
 	'single'     => !empty($tpl['single']),
 	// Base URL for blog links (Blog page URL, else the page the code sits on).

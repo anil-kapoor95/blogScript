@@ -1917,7 +1917,7 @@ INSERT INTO `blog_options` (`foreign_id`, `key`, `tab_id`, `value`, `label`, `ty
 (1, 'o_meta_title', 99, '', NULL, 'text', NULL, 0, NULL),
 (1, 'o_meta_keywords', 99, '', NULL, 'text', NULL, 0, NULL),
 (1, 'o_meta_description', 99, '', NULL, 'text', NULL, 0, NULL),
-(1, 'o_theme', 99, 'theme1|theme2|theme3|theme4|theme5|theme6|theme7|theme8|theme9|theme10::theme1', 'Theme 1|Theme 2|Theme 3|Theme 4|Theme 5|Theme 6|Theme 7|Theme 8|Theme 9|Theme 10', 'enum', 13, 0, NULL);
+(1, 'o_theme', 99, 'theme1|theme2|theme3|theme4|theme5|theme6|theme7|theme8|theme9|theme10|theme11|theme12::theme12', 'Theme 1|Theme 2|Theme 3|Theme 4|Theme 5|Theme 6|Theme 7|Theme 8|Theme 9|Theme 10|Theme 11|Theme 12', 'enum', 13, 0, NULL);
 
 INSERT INTO `blog_roles` (`id`, `role`, `status`) VALUES
 (1, 'admin', 'T'),

@@ -716,33 +716,6 @@ class pjInstaller extends pjInstallerAppController
 		$this->appendJs('pjInstaller.js', $this->getConst('PLUGIN_JS_PATH'));
 	}
 	
-	/**
-	 * Languages offered on the "Administrator Login" step: read from the Locale plugin's language list
-	 * (the database does not exist yet at that point). Returns array(iso => array(name, flag_file)).
-	 */
-	public function getInstallLanguages()
-	{
-		$languages = array();
-		if (!defined('PJ_PLUGINS_PATH'))
-		{
-			return $languages;
-		}
-		$file = PJ_PLUGINS_PATH . 'pjLocale/config/updates/update_2016_02_05_15_10_22.sql';
-		$string = is_file($file) ? @file_get_contents($file) : FALSE;
-		if ($string === FALSE)
-		{
-			return $languages;
-		}
-		if (preg_match_all("/^\\(\\d+, '([A-Za-z0-9\\-]+)', '(?:[^'\\\\]|\\\\.|'')*', (?:'(?:[^'\\\\]|\\\\.|'')*'|NULL), '((?:[^'\\\\]|\\\\.|'')*)', '(?:ltr|rtl)', '[^']*', '[^']*', '([^']*)'\\)[,;]/mu", $string, $m, PREG_SET_ORDER))
-		{
-			foreach ($m as $row)
-			{
-				$languages[$row[1]] = array('name' => str_replace("''", "'", $row[2]), 'flag' => $row[3]);
-			}
-		}
-		return $languages;
-	}
-
 	public function pjActionStep4()
 	{
 		self::pjActionCheckConfig();
@@ -974,35 +947,6 @@ class pjInstaller extends pjInstallerAppController
 								'action' => 'pjActionAddLocale',
 								'params' => array('iso' => $locale)
 							), array('return'));
-						}
-					}
-					
-					# Language chosen on the "Administrator Login" step. No language is added here (adding languages stays an
-					# Admin Panel feature): the one language created by the installation is simply set to the chosen one,
-					# the same way the Locale plugin's own update scripts relabel it. The admin panel and the website then
-					# open in it; its texts are the script's original ones until translated in Options > Languages.
-					if (!empty($_SESSION[$this->defaultInstaller]['install_locale']) && pjObject::getPlugin('pjLocale') !== NULL)
-					{
-						$install_iso = $_SESSION[$this->defaultInstaller]['install_locale'];
-						$install_languages = $this->getInstallLanguages();
-						if ($install_iso !== 'en-GB' && isset($install_languages[$install_iso]))
-						{
-							$chosen = pjLocaleLanguageModel::factory()
-								->setPrefix($_SESSION[$this->defaultInstaller]['prefix'])
-								->where('t1.iso', $install_iso)
-								->limit(1)
-								->findAll()
-								->getDataIndex(0);
-							if ($chosen)
-							{
-								$pjLocaleModel = pjLocaleModel::factory()->setPrefix($_SESSION[$this->defaultInstaller]['prefix']);
-								$statement = sprintf("UPDATE `%s` SET `language_iso` = :language_iso, `name` = :name, `dir` = :dir WHERE `is_default` = 1 LIMIT 1;", $pjLocaleModel->getTable());
-								$pjLocaleModel->prepare($statement)->exec(array(
-									'language_iso' => $install_iso,
-									'name' => !empty($chosen['native']) ? $chosen['native'] : $chosen['title'],
-									'dir' => !empty($chosen['dir']) ? $chosen['dir'] : 'ltr'
-								));
-							}
 						}
 					}
 					

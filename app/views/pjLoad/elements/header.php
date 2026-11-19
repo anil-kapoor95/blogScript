@@ -34,7 +34,7 @@
 			</div>
 			<?php
 			// Language switcher (only when more than one language has been added)
-			if ($controller->isMultiLang())
+			if ($controller->isMultiLang() && isset($tpl['option_arr']['o_show_lang_selector']) && $tpl['option_arr']['o_show_lang_selector'] == 'Yes')
 			{
 				?>
 				<?php
@@ -61,7 +61,7 @@
 						{
 							$is_current = (int) $locale['id'] === (int) $lang_current['id'];
 							?>
-							<li<?php echo $is_current ? ' class="active"' : NULL; ?>><a href="<?php echo $controller->switchLocaleUrl($locale['id'], true); ?>" class="pjBlLangItem<?php echo $is_current ? ' active' : NULL; ?>" hreflang="<?php echo pjSanitize::html($locale['language_iso']); ?>" lang="<?php echo pjSanitize::html($locale['language_iso']); ?>"<?php echo $is_current ? ' aria-current="true"' : NULL; ?>><img src="<?php echo pjSanitize::html($locale['flag_url']); ?>" alt="" /><span><?php echo pjSanitize::html($locale['name']); ?></span></a></li>
+							<li<?php echo $is_current ? ' class="active"' : NULL; ?>><a href="<?php echo $controller->switchLocaleUrl($locale['id'], true); ?>" data-pjlang="<?php echo (int) $locale['id'] === (int) $controller->getDefaultLocaleId() ? '' : pjSanitize::html($locale['language_iso']); ?>" class="pjBlLangItem<?php echo $is_current ? ' active' : NULL; ?>" hreflang="<?php echo pjSanitize::html($locale['language_iso']); ?>" lang="<?php echo pjSanitize::html($locale['language_iso']); ?>"<?php echo $is_current ? ' aria-current="true"' : NULL; ?>><img src="<?php echo pjSanitize::html($locale['flag_url']); ?>" alt="" /><span><?php echo pjSanitize::html($locale['name']); ?></span></a></li>
 							<?php
 						}
 						?>

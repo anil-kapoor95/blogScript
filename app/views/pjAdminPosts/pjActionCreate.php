@@ -192,21 +192,115 @@ if (isset($tpl['status']))
 		if (!window.sessionStorage) {
 			return;
 		}
+		/* Unsaved text of each language is kept while the author switches
+		   between the language flags (the switch reloads the page), so
+		   nothing typed or AI-generated in one language is lost or moved into
+		   another one. It is restored only when the page was reached through
+		   a flag; any other visit of this page starts clean. */
+		var localeInput = document.querySelector('form.pj-form input[name="locale"]'),
+			formLocale = localeInput ? String(localeInput.value) : "",
+			DRAFTS_KEY = "pjPostLocaleDrafts",
+			DRAFT_FIELDS = ["title", "body", "meta_title", "meta_keywords", "meta_description", "url_slug"],
+			viaFlag = sessionStorage.getItem("pjPostDraftSwitch") === "1";
+		sessionStorage.removeItem("pjPostDraftSwitch");
+		function readDrafts() {
+			try { return JSON.parse(sessionStorage.getItem(DRAFTS_KEY) || "{}") || {}; } catch (e) { return {}; }
+		}
+		function setBodyHtml(html) {
+			var bodyField = document.getElementById("body");
+			if (bodyField) { bodyField.value = html; }
+			if (window.tinymce) {
+				var put = function () { var ed = tinymce.get("body"); if (ed) { ed.setContent(html); } };
+				if (tinymce.get("body")) {
+					put();
+				} else if (tinymce.on) {
+					tinymce.on("AddEditor", function (e) {
+						if (e.editor && e.editor.id === "body") { e.editor.on("init", put); }
+					});
+				}
+			}
+		}
+		window.pjLangbarKeepDrafts = true;
+		$(document).on("click", ".pj-content-langbar a.pj-form-langbar-item", function () {
+			if (window.tinymce && tinymce.triggerSave) { try { tinymce.triggerSave(); } catch (e) {} }
+			var all = readDrafts(), mine = {}, any = false, i, el;
+			for (i = 0; i < DRAFT_FIELDS.length; i++) {
+				el = document.getElementById(DRAFT_FIELDS[i]);
+				mine[DRAFT_FIELDS[i]] = el ? el.value : "";
+				if (el && el.value) { any = true; }
+			}
+			if (any) { all[formLocale] = mine; } else { delete all[formLocale]; }
+			try {
+				sessionStorage.setItem(DRAFTS_KEY, JSON.stringify(all));
+				sessionStorage.setItem("pjPostDraftSwitch", "1");
+			} catch (e) {}
+		});
+		/* On save, the text kept for the other languages travels with the form
+		   ("tr[<language ID>][<field>]") and is saved as those languages' own
+		   translations, so switching flags before saving loses nothing. */
+		var createForm = document.querySelector('form.pj-form');
+		if (createForm) {
+			createForm.addEventListener("submit", function () {
+				var old = createForm.querySelectorAll("input.pj-tr-draft"), oi, all = readDrafts(), loc, fld, inp;
+				for (oi = 0; oi < old.length; oi++) { old[oi].parentNode.removeChild(old[oi]); }
+				for (loc in all) {
+					if (!all.hasOwnProperty(loc) || loc === formLocale) { continue; }
+					for (fld in all[loc]) {
+						if (all[loc].hasOwnProperty(fld) && all[loc][fld] !== "") {
+							inp = document.createElement("input");
+							inp.type = "hidden";
+							inp.className = "pj-tr-draft";
+							inp.name = "tr[" + loc + "][" + fld + "]";
+							inp.value = all[loc][fld];
+							createForm.appendChild(inp);
+						}
+					}
+				}
+			}, false);
+		}
+		if (viaFlag) {
+			var saved = readDrafts()[formLocale];
+			if (saved) {
+				for (var fi = 0; fi < DRAFT_FIELDS.length; fi++) {
+					var fe = document.getElementById(DRAFT_FIELDS[fi]);
+					if (fe && DRAFT_FIELDS[fi] !== "body" && saved[DRAFT_FIELDS[fi]]) {
+						fe.value = saved[DRAFT_FIELDS[fi]];
+						/* a restored slug counts as typed: it is not filled in from the title again */
+						if (DRAFT_FIELDS[fi] === "url_slug") {
+							var slugEvt = document.createEvent("Event");
+							slugEvt.initEvent("input", true, true);
+							fe.dispatchEvent(slugEvt);
+						}
+					}
+				}
+				if (saved.body) { setBodyHtml(saved.body); }
+			}
+		} else {
+			sessionStorage.removeItem(DRAFTS_KEY);
+		}
+
 		var raw = sessionStorage.getItem("pjAiDraft");
 		if (!raw) {
 			return;
 		}
-		sessionStorage.removeItem("pjAiDraft");
 
 		var draft;
 		try {
 			draft = JSON.parse(raw);
 		} catch (e) {
+			sessionStorage.removeItem("pjAiDraft");
 			return;
 		}
 		if (!draft) {
+			sessionStorage.removeItem("pjAiDraft");
 			return;
 		}
+		/* A draft written for one language is never put into another language's
+		   form: it stays available until the form of its own language opens. */
+		if (draft.locale && formLocale !== "" && String(draft.locale) !== formLocale) {
+			return;
+		}
+		sessionStorage.removeItem("pjAiDraft");
 
 		var titleEl = document.getElementById("title"),
 			bodyEl = document.getElementById("body"),

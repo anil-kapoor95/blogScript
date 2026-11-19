@@ -51,6 +51,55 @@ class pjAdminPosts extends pjAdmin
 		return $values;
 	}
 	
+	/**
+	 * Add Post: text the author wrote in the other languages of the form before saving (the form
+	 * keeps one language per page, so the other languages come in as "tr[<language ID>][<field>]").
+	 * Each is saved as that language's own translation; the default language also goes to the
+	 * original columns. Nothing typed in a language is dropped, and nothing is copied across languages.
+	 */
+	private function saveOtherLanguageDrafts($id, $content_locale)
+	{
+		if ($id <= 0 || !$this->isMultiLang() || empty($_POST['tr']) || !is_array($_POST['tr']))
+		{
+			return;
+		}
+		$default_locale = (int) $this->getDefaultLocaleId();
+		foreach ($_POST['tr'] as $locale => $vals)
+		{
+			$locale = (int) $locale;
+			if ($locale <= 0 || $locale === (int) $content_locale || $this->validLocaleId($locale) !== $locale || !is_array($vals))
+			{
+				continue;
+			}
+			$values = array();
+			foreach (pjAppController::$translatable['pjPost'] as $field)
+			{
+				if (isset($vals[$field]) && is_string($vals[$field]))
+				{
+					$values[$field] = $vals[$field];
+				}
+			}
+			if (empty($values))
+			{
+				continue;
+			}
+			if ($locale === $default_locale)
+			{
+				$columns = $values;
+				if (array_key_exists('url_slug', $columns))
+				{
+					list($columns['url_slug']) = $this->pjSlugFromForm('pjPostModel', $id, $columns['url_slug'], isset($columns['title']) ? $columns['title'] : '');
+				}
+				pjPostModel::factory()->reset()->where('id', $id)->limit(1)->modifyAll($columns);
+			} elseif (array_key_exists('url_slug', $values) || !empty($values['title']))
+			{
+				// a language written without a slug gets one from its own title
+				$values['url_slug'] = $this->translatedSlug('pjPost', $id, $locale, isset($values['url_slug']) ? $values['url_slug'] : '', isset($values['title']) ? $values['title'] : '');
+			}
+			$this->saveTranslation('pjPost', $id, $locale, $values);
+		}
+	}
+
 	public function pjActionIndex()
 	{
 		$this->checkLogin();
@@ -187,6 +236,7 @@ class pjAdminPosts extends pjAdmin
 					{
 						$this->saveTranslation('pjPost', $id, $content_locale, $this->getSubmittedTranslation());
 					}
+					$this->saveOtherLanguageDrafts((int) $id, (int) $content_locale);
 					$img_err = '';
 					if (isset($_FILES['image']))
 					{
@@ -509,6 +559,8 @@ class pjAdminPosts extends pjAdmin
 		$model    = isset($this->option_arr['o_ai_model'])    ? $this->option_arr['o_ai_model']    : '';
 		$apiKey   = isset($this->option_arr['o_ai_api_key'])  ? $this->option_arr['o_ai_api_key']  : '';
 		$topic    = isset($_POST['topic']) ? trim((string) $_POST['topic']) : '';
+		// The draft is written in the language of the post form it goes to (the default language)
+		$language = $this->getLocaleLabel($this->getDefaultLocaleId());
 
 		// Release the session's exclusive file lock before the slow, blocking
 		// provider call below. PHP's default session handler holds that lock
@@ -522,7 +574,7 @@ class pjAdminPosts extends pjAdmin
 			session_write_close();
 		}
 
-		$result = pjAi::generatePost($provider, $model, $apiKey, $topic);
+		$result = pjAi::generatePost($provider, $model, $apiKey, $topic, $language);
 
 		pjAppController::jsonResponse($result);
 	}
@@ -541,6 +593,9 @@ class pjAdminPosts extends pjAdmin
 
 		if ($this->isAdmin() || $this->isAuthor())
 		{
+			// The AI writes in the default language and the draft opens in that language's form
+			$this->set('ai_locale_id', (int) $this->getDefaultLocaleId());
+			$this->set('ai_language', $this->getLocaleLabel($this->getDefaultLocaleId()));
 			$this->appendJs('pjAdminPosts.js');
 		} else {
 			$this->set('status', 2);
@@ -579,6 +634,8 @@ class pjAdminPosts extends pjAdmin
 		$topic    = isset($_POST['topic'])  ? trim((string) $_POST['topic'])  : '';
 		$tone     = isset($_POST['tone'])   ? trim((string) $_POST['tone'])   : '';
 		$length   = isset($_POST['length']) ? trim((string) $_POST['length']) : '';
+		// The draft is written in the language of the post form it goes to (the default language)
+		$language = $this->getLocaleLabel($this->getDefaultLocaleId());
 
 		// See the matching comment in pjActionGenerateAi() above - this
 		// releases the session lock before the slow provider call so it
@@ -589,7 +646,7 @@ class pjAdminPosts extends pjAdmin
 			session_write_close();
 		}
 
-		$result = pjAi::generatePostOptions($provider, $model, $apiKey, $topic, $tone, $length, 3);
+		$result = pjAi::generatePostOptions($provider, $model, $apiKey, $topic, $tone, $length, 3, $language);
 
 		pjAppController::jsonResponse($result);
 	}

@@ -565,6 +565,8 @@ class pjAdminOptions extends pjAdmin
 				->findAll()
 				->getData()
 			);
+			// Languages for "Install config > Language" (only the ones added under Options > Languages)
+			$this->set('install_locales', $this->isMultiLang() ? $this->getLocales() : array());
 			
 			$this->appendJs('jquery.validate.min.js', PJ_THIRD_PARTY_PATH . 'validate/');
 			$this->appendJs('additional-methods.js', PJ_THIRD_PARTY_PATH . 'validate/');

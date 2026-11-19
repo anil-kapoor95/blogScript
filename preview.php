@@ -14,6 +14,27 @@
    never index the preview copy of the blog.
    ========================================================================== */
 
+// Language of the preview. Admin > Install > Language > Preview sends ?locale=<language ID>: it is kept
+// in the session and the address is cleaned (preview.php?post=<url-slug>) - the language is never part of
+// the visible URL. An empty value (default language) or a theme link (?theme=...) resets it.
+@session_start();
+if (array_key_exists('locale', $_GET))
+{
+	$loc = (isset($_GET['locale']) && is_string($_GET['locale']) && ctype_digit($_GET['locale'])) ? $_GET['locale'] : '';
+	if ($loc !== '') { $_SESSION['pjBlogPreviewLocale'] = $loc; } else { unset($_SESSION['pjBlogPreviewLocale']); }
+	$rest = $_GET;
+	unset($rest['locale']);
+	session_write_close();
+	header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?') . (empty($rest) ? '' : '?' . http_build_query($rest)));
+	exit;
+}
+if (isset($_GET['theme']) && !isset($_GET['post']))
+{
+	unset($_SESSION['pjBlogPreviewLocale']);
+}
+$previewLocale = isset($_SESSION['pjBlogPreviewLocale']) ? (string) $_SESSION['pjBlogPreviewLocale'] : '';
+session_write_close();
+
 // This file sits in the blog script folder, so the script URL is this folder.
 $scriptUrl = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off' ? 'https' : 'http')
 	. '://' . $_SERVER['HTTP_HOST'] . rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/') . '/';
@@ -22,6 +43,11 @@ $src = $scriptUrl . 'index.php?controller=pjEmbed&action=pjActionLoadJs&local=1'
 if (isset($_GET['theme']) && preg_match('/^theme\d{1,2}$/', (string) $_GET['theme']))
 {
 	$src .= '&theme=' . $_GET['theme'];
+}
+if ($previewLocale !== '')
+{
+	// the install code with that language (&locale=<language ID>)
+	$src .= '&locale=' . $previewLocale;
 }
 ?>
 <!doctype html>

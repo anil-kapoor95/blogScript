@@ -9,6 +9,7 @@ $bootCfg = array(
 	'host'    => 'pjBlogEmbed',
 	'content' => $tpl['contentUrl'],
 	'post'    => isset($tpl['fixedPost']) ? $tpl['fixedPost'] : '',
+	'lang'    => isset($tpl['installLang']) ? $tpl['installLang'] : '',
 	'theme'   => isset($tpl['previewTheme']) ? $tpl['previewTheme'] : '',
 	'local'   => !empty($tpl['local']),
 );

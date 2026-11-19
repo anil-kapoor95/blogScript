@@ -54,45 +54,10 @@ $STORAGE = &$_SESSION[$controller->defaultInstaller];
 			</tbody>
 		</table>
 		
-		<?php
-		$install_languages = $controller->getInstallLanguages();
-		if (!empty($install_languages))
-		{
-			$chosen_iso = isset($STORAGE['install_locale']) ? $STORAGE['install_locale'] : 'en-GB';
-			?>
-			<table cellpadding="0" cellspacing="0" class="i-table t20">
-				<thead>
-					<tr>
-						<th>Language</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>
-							<p>
-								<label class="i-title">Default language</label>
-								<select name="install_locale" id="install_locale" class="pj-form-field w300" tabindex="3">
-									<?php
-									foreach ($install_languages as $iso => $lang)
-									{
-										?><option value="<?php echo htmlspecialchars($iso); ?>"<?php echo $iso === $chosen_iso ? ' selected="selected"' : NULL; ?>><?php echo htmlspecialchars($lang['name']); ?></option><?php
-									}
-									?>
-								</select>
-							</p>
-							<p class="t5">The administration panel and the website open in this language. The texts of the script are in English until they are translated under Options &raquo; Languages, where more languages can be added later.</p>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<?php
-		}
-		?>
-		
 		<div class="t20">
 			<p class="float_left pt5">Need help? <a href="https://www.phpjabbers.com/contact.php" target="_blank">Contact us</a></p>
-			<input type="submit" tabindex="4" value="Continue &raquo;" class="pj-button float_right l5" />
-			<input type="button" tabindex="5" value="&laquo; Back" class="pj-button float_right" onclick="window.location='index.php?controller=pjInstaller&amp;action=pjActionStep3'" />
+			<input type="submit" tabindex="3" value="Continue &raquo;" class="pj-button float_right l5" />
+			<input type="button" tabindex="4" value="&laquo; Back" class="pj-button float_right" onclick="window.location='index.php?controller=pjInstaller&amp;action=pjActionStep3'" />
 			<br class="clear_both" />
 		</div>
 	</form>

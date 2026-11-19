@@ -55,7 +55,7 @@ if (isset($tpl['lp_arr']) && count($tpl['lp_arr']) > 1 && isset($tpl['option_arr
 		window.addEventListener('load', function () { setTimeout(function () { initial = snapshot(); started = true; }, 1500); });
 		document.addEventListener('click', function (e) {
 			var a = e.target.closest ? e.target.closest('.pj-content-langbar a.pj-form-langbar-item') : null;
-			if (a && started && snapshot() !== initial && !window.confirm(<?php echo json_encode(__('lblLeaveUnsaved', true)); ?>)) {
+			if (a && started && !window.pjLangbarKeepDrafts && snapshot() !== initial && !window.confirm(<?php echo json_encode(__('lblLeaveUnsaved', true)); ?>)) {
 				e.preventDefault();
 			}
 		});

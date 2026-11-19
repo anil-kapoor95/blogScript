@@ -428,7 +428,9 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 						title: opt.title || "",
 						body: opt.body || "",
 						meta_title: opt.meta_title || "",
-						meta_description: opt.meta_description || ""
+						meta_description: opt.meta_description || "",
+						/* the language the draft was written in: it opens in that language's form */
+						locale: (typeof pjAiWizardLocale !== "undefined" && pjAiWizardLocale) ? pjAiWizardLocale : 0
 					};
 
 				if (lastImage && lastImage.base64) {
@@ -451,7 +453,7 @@ var jQuery_1_8_2 = jQuery_1_8_2 || $.noConflict();
 						return;
 					}
 				}
-				window.location.href = "index.php?controller=pjAdminPosts&action=pjActionCreate";
+				window.location.href = "index.php?controller=pjAdminPosts&action=pjActionCreate" + (draft.locale ? "&locale=" + draft.locale : "");
 			});
 		})();
 		/* --------------------------------------------------------------------- */
