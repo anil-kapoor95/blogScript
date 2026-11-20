@@ -108,13 +108,15 @@
 
 	function langInUrl() { return !!(state.render && state.render.langInUrl); }
 
-	// The language the visitor chose is kept in the browser (per install code), not in the address.
+	// The language the visitor chose is kept for this browser tab only (sessionStorage, per install code), not in
+	// the address: reloads and links inside the tab keep it, a new tab or window starts again in the language of
+	// the install code.
 	function langKey() { return 'pjbl_lang|' + ((state.boot && state.boot.content) || '') + '|' + ((state.boot && state.boot.lang) || '') + ((state.boot && state.boot.pv) ? '|pv' + state.boot.pv : ''); }
 	function storedLang() {
-		try { var v = window.localStorage.getItem(langKey()); return v === null ? null : (v === '-' ? '' : v); } catch (e) { return null; }
+		try { var v = window.sessionStorage.getItem(langKey()); return v === null ? null : (v === '-' ? '' : v); } catch (e) { return null; }
 	}
 	function rememberLang(lang) {
-		try { window.localStorage.setItem(langKey(), lang ? lang : '-'); } catch (e) {}
+		try { window.sessionStorage.setItem(langKey(), lang ? lang : '-'); } catch (e) {}
 	}
 
 	function pageParams() {
