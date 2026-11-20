@@ -109,7 +109,7 @@
 	function langInUrl() { return !!(state.render && state.render.langInUrl); }
 
 	// The language the visitor chose is kept in the browser (per install code), not in the address.
-	function langKey() { return 'pjbl_lang|' + ((state.boot && state.boot.content) || '') + '|' + ((state.boot && state.boot.lang) || ''); }
+	function langKey() { return 'pjbl_lang|' + ((state.boot && state.boot.content) || '') + '|' + ((state.boot && state.boot.lang) || '') + ((state.boot && state.boot.pv) ? '|pv' + state.boot.pv : ''); }
 	function storedLang() {
 		try { var v = window.localStorage.getItem(langKey()); return v === null ? null : (v === '-' ? '' : v); } catch (e) { return null; }
 	}

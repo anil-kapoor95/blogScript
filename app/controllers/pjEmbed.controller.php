@@ -129,6 +129,9 @@ class pjEmbed extends pjLoad
 		$theme = isset($_GET['theme']) ? (string) $_GET['theme'] : '';
 		$this->set('previewTheme', preg_match('/^theme\d{1,2}$/', $theme) ? $theme : '');
 		$this->set('local', isset($_GET['local']) && (int) $_GET['local'] === 1);
+		// Preview ID (preview.php): keeps a language switched inside one preview out of the next one
+		$pv = isset($_GET['pv']) && is_scalar($_GET['pv']) ? (string) $_GET['pv'] : '';
+		$this->set('previewId', (isset($_GET['local']) && (int) $_GET['local'] === 1 && preg_match('/^[a-f0-9]{8,32}$/', $pv)) ? $pv : '');
 		if ($this->prefetch !== null)
 		{
 			// The blog content comes in this same response, so the page does

@@ -12,6 +12,7 @@ $bootCfg = array(
 	'lang'    => isset($tpl['installLang']) ? $tpl['installLang'] : '',
 	'theme'   => isset($tpl['previewTheme']) ? $tpl['previewTheme'] : '',
 	'local'   => !empty($tpl['local']),
+	'pv'      => isset($tpl['previewId']) ? $tpl['previewId'] : '',
 );
 readfile(PJ_INSTALL_PATH . PJ_JS_PATH . 'pjBlogEmbed.js');
 // Page on the same website: the content for its URL comes right here (see

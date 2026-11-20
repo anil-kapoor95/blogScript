@@ -24,7 +24,7 @@ foreach($theme_arr as $k => $v)
 	<div class="theme-box-outer">
 		<div class="theme-box">
 			<div id="theme_image_<?php echo $k;?>" class="theme-image<?php echo $is_used ? ' active' : null;?>">
-				<a target="_blank" href="preview.php?theme=<?php echo 'theme' . (int) $k; ?>" class="pj_preview_install"><img src="<?php echo $img;?>"/></a>
+				<a target="_blank" href="preview.php?theme=<?php echo 'theme' . (int) $k; ?>&amp;new=1" class="pj_preview_install"><img src="<?php echo $img;?>"/></a>
 				<span></span>
 			</div>
 			<label><?php echo pjSanitize::html($v);?></label>
